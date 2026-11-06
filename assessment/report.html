@@ -18,10 +18,13 @@
   code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; font-size: 8.5pt; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
   pre { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8pt; border-radius: 4px; font-size: 8pt; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
   hr { border: 0; border-top: 1px solid #e2e8f0; margin: 14pt 0; }
-  .fig { margin: 12pt 0 16pt; break-inside: avoid; }
+    .fig { margin: 10pt 0 14pt; break-inside: avoid; page-break-inside: avoid; }
   .fig .grid { display: grid; gap: 8pt; }
+  .fig .grid-ieee { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 6pt; align-items: start; }
   .fig .grid-4 { grid-template-columns: repeat(4, 1fr); }
-  .fig .sub img { width: 100%; display: block; border: 1px solid #e2e8f0; border-radius: 4px; }
+  .fig .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .fig .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .fig .sub img { width: 100%; max-height: 260px; object-fit: contain; object-position: top; display: block; border: 1px solid #e2e8f0; border-radius: 4px; background: #fafafa; }
   .sublabel { font-size: 7.5pt; color: #64748b; margin-top: 3pt; text-align: center; }
   figcaption { font: 8pt/1.4 "Times New Roman", Times, serif; color: #334155; margin-top: 5pt; text-align: center; }
   a { color: #d61e22; text-decoration: none; }
@@ -43,7 +46,7 @@
   <tbody>
     <tr>
       <td><strong>Kandidat</strong></td>
-      <td>Maulana Asykari</td>
+      <td>Maulana Asykari Muhammad</td>
     </tr>
     <tr>
       <td><strong>Posisi</strong></td>
@@ -209,7 +212,188 @@
 
 <hr>
 
-<h2>4. Implementasi</h2>
+<h2>4. Arsitektur Sistem dan Tech Stack</h2>
+
+<p>Berikut adalah arsitektur sistem dan alur data aplikasi web daftar tugas harian:</p>
+
+<figure class="fig">
+<svg viewBox="0 0 800 375" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="font-family: -apple-system, 'Segoe UI', Inter, Arial, sans-serif; font-size: 11px;">
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#EC2428" />
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#718096" />
+    </marker>
+  </defs>
+
+  <rect width="800" height="375" fill="#FFFFFF" rx="6" />
+
+  <!-- Box 1: Tailwind CLI (Build time) -->
+  <rect x="25" y="20" width="185" height="58" rx="5" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" stroke-dasharray="4,3" />
+  <text x="35" y="38" font-weight="bold" font-size="11px" fill="#212121">Tailwind Standalone CLI</text>
+  <text x="35" y="54" font-size="10.5px" fill="#64748B">bin/tailwindcss (tanpa Node.js)</text>
+  <text x="35" y="68" font-size="10.5px" fill="#64748B">Kompilasi ke static/tailwind.css</text>
+
+  <!-- Arrow Tailwind CLI -> Browser -->
+  <path d="M 117 78 L 117 108" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow-gray)" />
+  <text x="123" y="96" font-size="9.5px" fill="#64748B">Build-time</text>
+
+  <!-- Box 2: Browser (Client) -->
+  <rect x="25" y="110" width="185" height="175" rx="5" fill="#FFFFFF" stroke="#EC2428" stroke-width="1.8" />
+  <rect x="25" y="110" width="185" height="28" rx="5" fill="#E8E8E8" />
+  <text x="35" y="128" font-weight="bold" font-size="11.5px" fill="#212121">Browser / Client</text>
+  <text x="35" y="156" font-size="11px" fill="#212121">- Jinja HTML Rendered</text>
+  <text x="35" y="174" font-size="11px" fill="#212121">- Tailwind CSS Prebuilt</text>
+  <text x="35" y="192" font-size="11px" fill="#212121">- GSAP 3 Animasi &amp; Motion</text>
+  <text x="35" y="210" font-size="11px" fill="#212121">- app.js (Tab, Modal, Drag)</text>
+  <text x="35" y="230" font-size="10.5px" fill="#64748B">View: board, list, calendar,</text>
+  <text x="35" y="246" font-size="10.5px" fill="#64748B">gantt (?view= parameter)</text>
+  <text x="35" y="268" font-size="10.5px" fill="#64748B">HTML5 &lt;dialog&gt; native</text>
+
+  <!-- Arrow Browser <-> Flask -->
+  <line x1="210" y1="195" x2="280" y2="195" stroke="#EC2428" stroke-width="2" marker-end="url(#arrow-red)" />
+  <text x="247" y="182" text-anchor="middle" font-size="10.5px" font-weight="600" fill="#EC2428">HTTP / WSGI</text>
+  <text x="247" y="212" text-anchor="middle" font-size="9.5px" fill="#64748B">Port 5001</text>
+
+  <!-- Box 3: Postman / Newman (Side Top) -->
+  <rect x="285" y="20" width="250" height="58" rx="5" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" />
+  <text x="295" y="38" font-weight="bold" font-size="11px" fill="#212121">Postman / Newman Test Suite</text>
+  <text x="295" y="54" font-size="10.5px" fill="#64748B">16 Requests, 81 Assertions, 0 Failed</text>
+  <text x="295" y="68" font-size="10.5px" fill="#64748B">baseUrl: http://127.0.0.1:5001</text>
+
+  <!-- Arrow Postman -> Flask -->
+  <line x1="410" y1="78" x2="410" y2="108" stroke="#718096" stroke-width="1.2" marker-end="url(#arrow-gray)" />
+  <text x="416" y="96" font-size="9.5px" fill="#64748B">JSON API</text>
+
+  <!-- Box 4: Flask 3 App (Main Center) -->
+  <rect x="285" y="110" width="250" height="175" rx="5" fill="#FFFFFF" stroke="#EC2428" stroke-width="1.8" />
+  <rect x="285" y="110" width="250" height="28" rx="5" fill="#E8E8E8" />
+  <text x="295" y="128" font-weight="bold" font-size="11.5px" fill="#212121">Flask 3 Application (app.py)</text>
+  <text x="295" y="156" font-size="11px" fill="#212121">- Rute HTML: /, /tasks/*</text>
+  <text x="295" y="174" font-size="11px" fill="#212121">- REST API: /api/tasks/*</text>
+  <text x="295" y="192" font-size="11px" fill="#212121">- Validasi Payload &amp; Sanitasi</text>
+  <text x="295" y="210" font-size="11px" fill="#212121">- Jinja UI Macros (components/ui.html)</text>
+  <text x="295" y="230" font-size="10.5px" fill="#64748B">CLI Seed: flask --app app seed</text>
+  <text x="295" y="246" font-size="10.5px" fill="#64748B">Context Processor (STAGES, WIB)</text>
+  <text x="295" y="268" font-size="10.5px" fill="#64748B">Error Handler (400, 404, 500 JSON/HTML)</text>
+
+  <!-- Arrow Flask <-> MySQL -->
+  <line x1="535" y1="195" x2="605" y2="195" stroke="#EC2428" stroke-width="2" marker-end="url(#arrow-red)" />
+  <text x="572" y="174" text-anchor="middle" font-size="10px" font-weight="600" fill="#EC2428">SQLAlchemy</text>
+  <text x="572" y="188" text-anchor="middle" font-size="9.5px" fill="#212121">+ PyMySQL</text>
+
+  <!-- Box 5: Database MySQL (Main Right) -->
+  <rect x="610" y="110" width="165" height="175" rx="5" fill="#FFFFFF" stroke="#EC2428" stroke-width="1.8" />
+  <rect x="610" y="110" width="165" height="28" rx="5" fill="#E8E8E8" />
+  <text x="620" y="128" font-weight="bold" font-size="11.5px" fill="#212121">MySQL 8.4 Server</text>
+  <text x="620" y="156" font-weight="600" font-size="11px" fill="#212121">Database: todo_db</text>
+  <text x="620" y="176" font-size="11px" fill="#212121">Tabel tasks</text>
+  <text x="630" y="192" font-size="10px" fill="#64748B">id, title, status, due...</text>
+  <text x="620" y="212" font-size="11px" fill="#212121">Tabel task_events</text>
+  <text x="630" y="228" font-size="10px" fill="#64748B">task_id, from/to_status</text>
+  <text x="620" y="250" font-size="10px" fill="#64748B">ON DELETE CASCADE</text>
+  <text x="620" y="266" font-size="10px" fill="#64748B">Charset: utf8mb4</text>
+
+  <!-- Box 6: pytest (Side Bottom) -->
+  <rect x="285" y="305" width="250" height="50" rx="5" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" />
+  <line x1="410" y1="305" x2="410" y2="288" stroke="#718096" stroke-width="1.2" marker-end="url(#arrow-gray)" />
+  <text x="295" y="324" font-weight="bold" font-size="11px" fill="#212121">pytest Runner (test_app.py)</text>
+  <text x="295" y="340" font-size="10.5px" fill="#64748B">95 Test Lulus (SQLite In-Memory :memory:)</text>
+</svg>
+  <figcaption>Gambar 1. Diagram arsitektur sistem dan alur data aplikasi.</figcaption>
+</figure>
+
+<p>Tabel tech stack:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 20%;">Layer</th>
+      <th style="width: 20%;">Teknologi</th>
+      <th style="width: 15%;">Versi</th>
+      <th>Alasan</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Bahasa Pemrograman</td>
+      <td>Python</td>
+      <td>3.12</td>
+      <td>Bahasa utama backend dengan dukungan pengetikan dan zoneinfo bawaan.</td>
+    </tr>
+    <tr>
+      <td>Web Framework</td>
+      <td>Flask</td>
+      <td>3.0.3</td>
+      <td>Framework WSGI minimalis, cepat, dan fleksibel untuk rendering rute HTML dan API REST.</td>
+    </tr>
+    <tr>
+      <td>ORM Database</td>
+      <td>Flask-SQLAlchemy</td>
+      <td>3.1.1</td>
+      <td>Abstraksi relasional tabel tasks dan task_events dengan manajemen sesi otomatis.</td>
+    </tr>
+    <tr>
+      <td>Database Driver</td>
+      <td>PyMySQL</td>
+      <td>1.1.1</td>
+      <td>Driver MySQL berbasis Python murni tanpa ketergantungan library C lokal.</td>
+    </tr>
+    <tr>
+      <td>Basis Data</td>
+      <td>MySQL</td>
+      <td>8.4 LTS</td>
+      <td>RDBMS relasional ACID standar produksi perbankan dengan integritas foreign key kaskade.</td>
+    </tr>
+    <tr>
+      <td>Template Engine</td>
+      <td>Jinja2</td>
+      <td>3.1.4</td>
+      <td>Server-side rendering aman dengan escape HTML otomatis dan modularitas makro UI terpusat.</td>
+    </tr>
+    <tr>
+      <td>Styling CSS</td>
+      <td>Tailwind CSS</td>
+      <td>v4.0 Standalone</td>
+      <td>Utilitas CSS modern terkompilasi melalui binary tanpa ketergantungan ekosistem Node.js.</td>
+    </tr>
+    <tr>
+      <td>Animasi Antarmuka</td>
+      <td>GSAP</td>
+      <td>3.12.5</td>
+      <td>Library animasi web dengan pelindung aksesibilitas prefers-reduced-motion.</td>
+    </tr>
+    <tr>
+      <td>Tipografi</td>
+      <td>Plus Jakarta Sans</td>
+      <td>Google Fonts</td>
+      <td>Font geometri modern standar korporat perbankan Indonesia dengan keterbacaan tinggi.</td>
+    </tr>
+    <tr>
+      <td>Pengujian Backend</td>
+      <td>pytest</td>
+      <td>8.3.3</td>
+      <td>Framework otomatisasi 95 test unit dan rute dengan isolasi basis data SQLite in-memory.</td>
+    </tr>
+    <tr>
+      <td>Pengujian API</td>
+      <td>Postman / Newman</td>
+      <td>Postman v2.1 / Newman 6</td>
+      <td>Otomasi 81 asersi validasi kontrak skema JSON, batas waktu, dan kode status HTTP.</td>
+    </tr>
+    <tr>
+      <td>Pengujian UI</td>
+      <td>Playwright</td>
+      <td>1.48.0</td>
+      <td>Headless browser Chromium untuk verifikasi 24 kombinasi resolusi tanpa pergeseran samping.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>5. Implementasi</h2>
 
 <p>Aplikasi berjalan pada file <code>app.html</code> yang menampung header, tab navigasi, filter prioritas, tombol tambah tugas, dan modal dialog:</p>
 <ul>
@@ -358,9 +542,9 @@
 
 <hr>
 
-<h2>5. Bukti Pengujian</h2>
+<h2>6. Bukti Pengujian</h2>
 
-<h3>5.1 Bukti Pytest (95 Passed)</h3>
+<h3>6.1 Bukti Pytest (95 Passed)</h3>
 <p>Berkas bukti: <a href="evidence/pytest.txt">evidence/pytest.txt</a></p>
 
 <pre><code>$ .venv/bin/python -m pytest -v  (2026-11-06 19:28 WIB)
@@ -370,7 +554,7 @@ collected 95 items
 
 <p>Seluruh pengujian unit dan rute backend lulus tanpa kesalahan.</p>
 
-<h3>5.2 Bukti Newman Postman (81 Assertions, 0 Failed)</h3>
+<h3>6.2 Bukti Newman Postman (81 Assertions, 0 Failed)</h3>
 <p>Berkas bukti: <a href="evidence/postman-newman.txt">evidence/postman-newman.txt</a></p>
 
 <pre><code>$ newman run postman_collection.json  (2026-11-06 19:02 WIB)
@@ -379,7 +563,7 @@ total run duration: 233ms, average response time: 2ms [min: 1ms, max: 14ms]</cod
 
 <p>Sebanyak 16 request API berhasil divalidasi dengan 81 asersi tanpa kegagalan.</p>
 
-<h3>5.3 Bukti Interaksi UI dan Viewport Playwright (Zero Sideways Scroll)</h3>
+<h3>6.3 Bukti Interaksi UI dan Viewport Playwright (Zero Sideways Scroll)</h3>
 <p>Berkas bukti: <a href="evidence/ui-click-through.txt">evidence/ui-click-through.txt</a></p>
 
 <pre><code>Playwright click-through check, Chromium headless (2026-11-06 19:00 WIB)
@@ -390,7 +574,7 @@ js errors: []</code></pre>
 
 <p>Pengujian memastikan tab berpindah mulus, dialog modal mengunci scroll halaman, 24 kombinasi viewport bebas scroll horizontal (<code>sx: 0</code>), dan ukuran tombol memenuhi minimal 44x44px.</p>
 
-<h3>5.4 Bukti Fit Kalender Desktop (ScrollHeight == InnerHeight)</h3>
+<h3>6.4 Bukti Fit Kalender Desktop (ScrollHeight == InnerHeight)</h3>
 <p>Berkas bukti: <a href="evidence/calendar-fit.txt">evidence/calendar-fit.txt</a></p>
 
 <pre><code>Calendar view fit check: scrollHeight (sh) must equal innerHeight (ih) on desktop
@@ -403,7 +587,7 @@ errors []</code></pre>
 
 <p>Pada resolusi desktop dan tablet, tinggi total halaman sama dengan tinggi layar peramban (<code>sh == ih</code>), sehingga kalender pas satu layar tanpa scrollbar jendela.</p>
 
-<h3>5.x Pengujian Ekstrem</h3>
+<h3>6.x Pengujian Ekstrem</h3>
 <p>Saya menjalankan pengujian kasus batas dan beban ekstrem pada backend dan antarmuka pengguna:</p>
 <ul>
   <li>Pengujian ekstrem API dan keamanan backend (<a href="evidence/extreme-tests.txt">evidence/extreme-tests.txt</a>): Sebanyak 84 skenario dijalankan dengan hasil 84 lulus dan 0 gagal (84 pass, 0 fail). Pengujian mencakup payload XSS dan SQL injection, batas panjang dan karakter Unicode (200 karakter CJK, emoji, teks RTL), tanggal tidak valid termasuk 2026-02-29 serta tahun 0001 dan 9999, body request rusak dan body 1 MB, ID bernilai sangat besar, HTTP method yang salah, percobaan open-redirect, konkurensi 100 create dan 100 move paralel, serta performa 400+ tugas di mana setiap tampilan merespons di bawah 1.5 detik. Dua bug berhasil ditemukan dan diperbaiki: bulan kalender 9999-12 dan 0001-01 yang memicu error 500 karena overflow tanggal, serta karakter garis miring terbalik (backslash) pada parameter redirect yang sempat diterima.</li>
@@ -412,128 +596,126 @@ errors []</code></pre>
 
 <hr>
 
-<h2>6. Bukti Visual</h2>
+<h2>7. Bukti Visual</h2>
 
 <p>Tangkapan layar hasil uji Playwright Chromium headless di direktori <code>assessment/screenshots</code>:</p>
 
-<h3>6.1 Tampilan Papan Kanban (Board View)</h3>
+<h3>7.1 Tampilan Papan Kanban (Board View)</h3>
 <figure class="fig">
-  <div class="sub" style="margin-bottom: 8pt;">
-    <img src="screenshots/board-desktop.png" alt="Papan Kanban Desktop">
-    <div class="sublabel">Desktop (1440px)</div>
-  </div>
-  <div class="grid grid-3">
+  <div class="grid grid-ieee">
+    <div class="sub">
+      <img src="screenshots/board-desktop.png" alt="Papan Kanban Desktop">
+      <div class="sublabel">(a) Desktop 1440px</div>
+    </div>
     <div class="sub">
       <img src="screenshots/board-fold-open.png" alt="Papan Kanban Fold Open">
-      <div class="sublabel">Fold Terbuka (884px)</div>
+      <div class="sublabel">(b) Fold terbuka 884px</div>
     </div>
     <div class="sub">
       <img src="screenshots/board-fold-cover.png" alt="Papan Kanban Fold Cover">
-      <div class="sublabel">Fold Tertutup (344px)</div>
+      <div class="sublabel">(c) Fold tertutup 344px</div>
     </div>
     <div class="sub">
       <img src="screenshots/board-mobile.png" alt="Papan Kanban Mobile">
-      <div class="sublabel">Ponsel (390px)</div>
+      <div class="sublabel">(d) Ponsel 390px</div>
     </div>
   </div>
-  <figcaption>Gambar 1. Papan Kanban pada desktop, perangkat lipat terbuka, cover screen, dan ponsel.</figcaption>
+  <figcaption>Gambar 2. Tampilan Papan Kanban: (a) desktop, (b) fold terbuka, (c) fold tertutup, (d) ponsel.</figcaption>
 </figure>
 
-<h3>6.2 Tampilan Kalender Bulanan (Calendar View)</h3>
+<h3>7.2 Tampilan Kalender Bulanan (Calendar View)</h3>
 <figure class="fig">
-  <div class="sub" style="margin-bottom: 8pt;">
-    <img src="screenshots/calendar-desktop.png" alt="Kalender Bulanan Desktop">
-    <div class="sublabel">Desktop (1440px)</div>
-  </div>
-  <div class="grid grid-3">
+  <div class="grid grid-ieee">
+    <div class="sub">
+      <img src="screenshots/calendar-desktop.png" alt="Kalender Bulanan Desktop">
+      <div class="sublabel">(a) Desktop 1440px</div>
+    </div>
     <div class="sub">
       <img src="screenshots/calendar-fold-open.png" alt="Kalender Bulanan Fold Open">
-      <div class="sublabel">Fold Terbuka (884px)</div>
+      <div class="sublabel">(b) Fold terbuka 884px</div>
     </div>
     <div class="sub">
       <img src="screenshots/calendar-fold-cover.png" alt="Kalender Bulanan Fold Cover">
-      <div class="sublabel">Fold Tertutup (344px)</div>
+      <div class="sublabel">(c) Fold tertutup 344px</div>
     </div>
     <div class="sub">
       <img src="screenshots/calendar-mobile.png" alt="Kalender Bulanan Mobile">
-      <div class="sublabel">Ponsel (390px)</div>
+      <div class="sublabel">(d) Ponsel 390px</div>
     </div>
   </div>
-  <figcaption>Gambar 2. Kalender bulanan dan adaptasi daftar agenda seluler.</figcaption>
+  <figcaption>Gambar 3. Tampilan Kalender Bulanan: (a) desktop, (b) fold terbuka, (c) fold tertutup, (d) ponsel.</figcaption>
 </figure>
 
-<h3>6.3 Tampilan Bagan Gantt (Gantt View)</h3>
+<h3>7.3 Tampilan Bagan Gantt (Gantt View)</h3>
 <figure class="fig">
-  <div class="sub" style="margin-bottom: 8pt;">
-    <img src="screenshots/gantt-desktop.png" alt="Bagan Gantt Desktop">
-    <div class="sublabel">Desktop (1440px)</div>
-  </div>
-  <div class="grid grid-3">
+  <div class="grid grid-ieee">
+    <div class="sub">
+      <img src="screenshots/gantt-desktop.png" alt="Bagan Gantt Desktop">
+      <div class="sublabel">(a) Desktop 1440px</div>
+    </div>
     <div class="sub">
       <img src="screenshots/gantt-fold-open.png" alt="Bagan Gantt Fold Open">
-      <div class="sublabel">Fold Terbuka (884px)</div>
+      <div class="sublabel">(b) Fold terbuka 884px</div>
     </div>
     <div class="sub">
       <img src="screenshots/gantt-fold-cover.png" alt="Bagan Gantt Fold Cover">
-      <div class="sublabel">Fold Tertutup (344px)</div>
+      <div class="sublabel">(c) Fold tertutup 344px</div>
     </div>
     <div class="sub">
       <img src="screenshots/gantt-mobile.png" alt="Bagan Gantt Mobile">
-      <div class="sublabel">Ponsel (390px)</div>
+      <div class="sublabel">(d) Ponsel 390px</div>
     </div>
   </div>
-  <figcaption>Gambar 3. Bagan Gantt rentang pengerjaan tugas lintas perangkat.</figcaption>
+  <figcaption>Gambar 4. Tampilan Bagan Gantt: (a) desktop, (b) fold terbuka, (c) fold tertutup, (d) ponsel.</figcaption>
 </figure>
 
-<h3>6.4 Tampilan Tabel Daftar (List View)</h3>
+<h3>7.4 Tampilan Tabel Daftar (List View)</h3>
 <figure class="fig">
-  <div class="sub" style="margin-bottom: 8pt;">
-    <img src="screenshots/list-desktop.png" alt="Tabel Daftar Desktop">
-    <div class="sublabel">Desktop (1440px)</div>
-  </div>
-  <div class="grid grid-3">
+  <div class="grid grid-ieee">
+    <div class="sub">
+      <img src="screenshots/list-desktop.png" alt="Tabel Daftar Desktop">
+      <div class="sublabel">(a) Desktop 1440px</div>
+    </div>
     <div class="sub">
       <img src="screenshots/list-fold-open.png" alt="Tabel Daftar Fold Open">
-      <div class="sublabel">Fold Terbuka (884px)</div>
+      <div class="sublabel">(b) Fold terbuka 884px</div>
     </div>
     <div class="sub">
       <img src="screenshots/list-fold-cover.png" alt="Tabel Daftar Fold Cover">
-      <div class="sublabel">Fold Tertutup (344px)</div>
+      <div class="sublabel">(c) Fold tertutup 344px</div>
     </div>
     <div class="sub">
       <img src="screenshots/list-mobile.png" alt="Tabel Daftar Mobile">
-      <div class="sublabel">Ponsel (390px)</div>
+      <div class="sublabel">(d) Ponsel 390px</div>
     </div>
   </div>
-  <figcaption>Gambar 4. Tabel Daftar tugas lintas resolusi.</figcaption>
+  <figcaption>Gambar 5. Tampilan Tabel Daftar: (a) desktop, (b) fold terbuka, (c) fold tertutup, (d) ponsel.</figcaption>
 </figure>
 
-<h3>6.5 Modal Dialog Rincian Tugas dan Linimasa</h3>
+<h3>7.5 Modal Dialog Rincian Tugas dan Linimasa</h3>
 <figure class="fig">
-  <div class="sub" style="margin-bottom: 8pt;">
-    <img src="screenshots/dialog-task-desktop.png" alt="Dialog Rincian Tugas Desktop">
-    <div class="sublabel">Desktop (1440px)</div>
-  </div>
-  <div class="grid grid-3">
+  <div class="grid grid-ieee">
+    <div class="sub">
+      <img src="screenshots/dialog-task-desktop.png" alt="Dialog Rincian Tugas Desktop">
+      <div class="sublabel">(a) Desktop 1440px</div>
+    </div>
     <div class="sub">
       <img src="screenshots/dialog-task-fold-open.png" alt="Dialog Rincian Tugas Fold Open">
-      <div class="sublabel">Fold Terbuka (884px)</div>
+      <div class="sublabel">(b) Fold terbuka 884px</div>
     </div>
     <div class="sub">
       <img src="screenshots/dialog-task-fold-cover.png" alt="Dialog Rincian Tugas Fold Cover">
-      <div class="sublabel">Fold Tertutup (344px)</div>
+      <div class="sublabel">(c) Fold tertutup 344px</div>
     </div>
     <div class="sub">
       <img src="screenshots/dialog-task-mobile.png" alt="Dialog Rincian Tugas Mobile">
-      <div class="sublabel">Ponsel (390px)</div>
+      <div class="sublabel">(d) Ponsel 390px</div>
     </div>
   </div>
-  <figcaption>Gambar 5. Modal dialog rincian tugas dan linimasa durasi status.</figcaption>
-</figure>
+  <figcaption>Gambar 6. Modal Dialog Rincian Tugas: (a) desktop, (b) fold terbuka, (c) fold tertutup, (d) ponsel.</figcaption>
+</figure><hr>
 
-<hr>
-
-<h2>7. Jawaban Soal QA (Postman API Testing)</h2>
+<h2>8. Jawaban Soal QA (Postman API Testing)</h2>
 
 <p>Saya memvalidasi sembilan komponen utama pada setiap respons API:</p>
 <ol>
@@ -552,7 +734,7 @@ errors []</code></pre>
 
 <hr>
 
-<h2>8. Penggunaan AI dan Verifikasinya</h2>
+<h2>9. Penggunaan AI dan Verifikasinya</h2>
 
 <p>Saya mengembangkan proyek ini dengan bantuan AI secara transparan:</p>
 <ul>
@@ -574,7 +756,9 @@ errors []</code></pre>
 
 <hr>
 
-<h2>9. Langkah Pengembangan Berikutnya</h2>
+<h2>10. Langkah Pengembangan Berikutnya</h2>
+
+<p>Jika waktu pengerjaan lebih panjang, saya akan melakukan uji responsivitas pada perangkat fisik (termasuk ponsel lipat dengan engsel) dan audit Lighthouse untuk performa, aksesibilitas, best practices, dan SEO, lalu melampirkan hasilnya sebagai bukti tambahan.</p>
 
 <p>Rencana peningkatan lanjutan untuk kebutuhan produksi perbankan:</p>
 <ol>
@@ -587,7 +771,7 @@ errors []</code></pre>
 
 <hr>
 
-<h2>10. Sumber dan Atribusi</h2>
+<h2>11. Sumber dan Atribusi</h2>
 
 <ul>
   <li>Logo, favicon, dan palet warna CIMB Niaga diambil dari <code>cimbniaga.co.id</code> untuk studi kasus penugasan MagangHub ini saja, bukan produk resmi PT Bank CIMB Niaga Tbk.</li>
