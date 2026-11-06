@@ -1,0 +1,271 @@
+{% set btn_base = "btn inline-flex items-center justify-center font-sans font-semibold no-underline cursor-pointer select-none whitespace-nowrap min-h-[44px] transition-transform duration-160 ease-out active:translate-y-[2px] active:shadow-clay-pressed disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0" %}
+
+{% set btn_variants = {
+  'primary': 'bg-accent text-accent-ink border-2 border-accent shadow-clay hover:bg-accent-hover active:bg-accent-pressed',
+  'secondary': 'bg-surface text-ink border-2 border-line shadow-clay hover:bg-bg',
+  'danger': 'bg-surface text-accent border-2 border-accent shadow-clay hover:bg-prio-high',
+  'ghost': 'bg-transparent text-ink border-2 border-transparent shadow-none hover:bg-bg'
+} %}
+
+{% set btn_sizes = {
+  'md': 'min-h-[44px] px-[16px] py-[8px] rounded-btn text-paragraph',
+  'sm': 'min-h-[44px] px-[12px] py-[6px] rounded-btn text-alt-paragraph'
+} %}
+
+{% macro button(label, variant="primary", type="button", href=None, size="md", attrs={}) %}
+  {% set variant_cls = btn_variants.get(variant, btn_variants['secondary']) %}
+  {% set size_cls = btn_sizes.get(size, btn_sizes['md']) %}
+  {% set class_names = btn_base ~ " " ~ variant_cls ~ " " ~ size_cls %}
+  {% if attrs and 'class' in attrs %}
+    {% set class_names = class_names ~ " " ~ attrs['class'] %}
+  {% endif %}
+  {% if href %}
+    <a href="{{ href }}" class="{{ class_names }}"
+      {% for k, v in attrs.items() if k != 'class' %} {{ k }}="{{ v }}"{% endfor %}
+    >{{ label }}</a>
+  {% else %}
+    <button type="{{ type }}" class="{{ class_names }}"
+      {% for k, v in attrs.items() if k != 'class' %} {{ k }}="{{ v }}"{% endfor %}
+    >{{ label }}</button>
+  {% endif %}
+{% endmacro %}
+
+{% macro priority_chip(priority) %}
+  {% set priority_labels = {'high': 'Tinggi', 'medium': 'Sedang', 'low': 'Rendah'} %}
+  <span class="chip chip--priority-{{ priority }} text-alt-paragraph">
+    {{ priority_labels.get(priority, 'Sedang') }}
+  </span>
+{% endmacro %}
+
+{% macro stage_badge(status) %}
+  {% set fallback_labels = {'todo': 'Belum Mulai', 'in_progress': 'Dikerjakan', 'ready': 'Siap Dicek', 'review': 'Review', 'done': 'Selesai'} %}
+  {% set label = (stage_labels.get(status) if stage_labels is defined and stage_labels else None) or fallback_labels.get(status, status) %}
+  <span class="badge badge--stage badge--stage-{{ status }} text-alt-paragraph">
+    {{ label }}
+  </span>
+{% endmacro %}
+
+{% macro field(name, label, type="text", value="", error=None, required=false, options=None, rows=3) %}
+  <div class="field {% if error %}field--error{% endif %}">
+    <label for="field-{{ name }}" class="field__label text-alt-paragraph">
+      {{ label }}
+      {% if required %}<span class="field__required" aria-hidden="true">*</span>{% endif %}
+    </label>
+    {% if type == 'textarea' %}
+      <textarea
+        name="{{ name }}"
+        id="field-{{ name }}"
+        class="field__input field__input--textarea text-paragraph"
+        rows="{{ rows or 3 }}"
+        maxlength="2000"
+        {% if required %}required{% endif %}
+        {% if error %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}
+      >{{ value or '' }}</textarea>
+    {% elif type == 'select' %}
+      <select
+        name="{{ name }}"
+        id="field-{{ name }}"
+        class="field__input field__input--select text-paragraph"
+        {% if required %}required{% endif %}
+        {% if error %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}
+      >
+        {% if options %}
+          {% for opt_val, opt_label in options %}
+            <option value="{{ opt_val }}" {% if value == opt_val %}selected{% endif %}>{{ opt_label }}</option>
+          {% endfor %}
+        {% endif %}
+      </select>
+    {% else %}
+      <input
+        type="{{ type }}"
+        name="{{ name }}"
+        id="field-{{ name }}"
+        class="field__input text-paragraph"
+        value="{{ value or '' }}"
+        {% if type == 'text' %}maxlength="200"{% endif %}
+        {% if required %}required{% endif %}
+        {% if error %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}
+      >
+    {% endif %}
+    {% if error %}
+      <p id="{{ name }}-error" class="field__error text-alt-paragraph" role="alert">{{ error }}</p>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro empty_state(text, action_label=None, action_href=None) %}
+  <div class="empty card card--clay">
+    <p class="empty__text text-paragraph">{{ text }}</p>
+    {% if action_label and action_href %}
+      <div class="empty__action">
+        {{ button(action_label, href=action_href, variant="secondary") }}
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro flash_messages() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <section class="flash-group flex flex-col gap-2.5" aria-label="Notifikasi sistem">
+        {% for category, message in messages %}
+          <div class="flash card card--clay flex items-center gap-3 p-3.5" role="status" aria-live="polite">
+            {% if category == 'error' %}
+              <span class="badge text-alt-paragraph font-bold text-accent bg-transparent border border-accent">Galat</span>
+            {% else %}
+              <span class="badge text-alt-paragraph font-bold text-ink bg-transparent border border-line-strong">Sukses</span>
+            {% endif %}
+            <p class="flash__text text-paragraph font-medium text-ink">{{ message }}</p>
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+  {% endwith %}
+{% endmacro %}
+
+{% macro move_form(task, next="/", show_select=true) %}
+  {% set fallback_stages = [('todo', 'Belum Mulai'), ('in_progress', 'Dikerjakan'), ('ready', 'Siap Dicek'), ('review', 'Review'), ('done', 'Selesai')] %}
+  {% set stage_list = (stages if stages is defined and stages else None) or fallback_stages %}
+  {% set ns = namespace(idx=-1) %}
+  {% for s in stage_list %}
+    {% if s[0] == task.status %}
+      {% set ns.idx = loop.index0 %}
+    {% endif %}
+  {% endfor %}
+
+  <div class="move-controls">
+    <div class="move-controls__adjacent">
+      {% if ns.idx > 0 %}
+        {% set prev_key = stage_list[ns.idx - 1][0] %}
+        {% set prev_label = stage_list[ns.idx - 1][1] %}
+        <form method="POST" action="/tasks/{{ task.id }}/move" class="form-move form-move--prev">
+          <input type="hidden" name="next" value="{{ next }}">
+          <input type="hidden" name="status" value="{{ prev_key }}">
+          {{ button("Mundur", variant="secondary", type="submit", size="sm", attrs={"title": "Mundur ke " ~ prev_label, "aria-label": "Mundur ke " ~ prev_label}) }}
+        </form>
+      {% endif %}
+
+      {% if ns.idx != -1 and ns.idx < stage_list|length - 1 %}
+        {% set next_key = stage_list[ns.idx + 1][0] %}
+        {% set next_label = stage_list[ns.idx + 1][1] %}
+        <form method="POST" action="/tasks/{{ task.id }}/move" class="form-move form-move--next">
+          <input type="hidden" name="next" value="{{ next }}">
+          <input type="hidden" name="status" value="{{ next_key }}">
+          {{ button("Lanjut", variant="secondary", type="submit", size="sm", attrs={"title": "Lanjut ke " ~ next_label, "aria-label": "Lanjut ke " ~ next_label}) }}
+        </form>
+      {% endif %}
+    </div>
+
+    {% if show_select %}
+      <form method="POST" action="/tasks/{{ task.id }}/move" class="form-move form-move--select">
+        <input type="hidden" name="next" value="{{ next }}">
+        <label for="move-select-{{ task.id }}" class="sr-only">Pindah status tugas</label>
+        <select name="status" id="move-select-{{ task.id }}" class="field__input field__input--select-sm text-alt-paragraph">
+          {% for s in stage_list %}
+            <option value="{{ s[0] }}" {% if s[0] == task.status %}selected{% endif %}>{{ s[1] }}</option>
+          {% endfor %}
+        </select>
+        {{ button("Pindah", variant="secondary", type="submit", size="sm") }}
+      </form>
+    {% else %}
+      {# Hidden form submitted by drag-and-drop handler when select mode is off. #}
+      <form method="POST" action="/tasks/{{ task.id }}/move" class="form-move form-move--dnd sr-only" aria-hidden="true">
+        <input type="hidden" name="next" value="{{ next }}">
+        <input type="hidden" name="status" value="">
+      </form>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro skeleton(view) %}
+<div class="skeleton-container w-full" aria-busy="true">
+  <span class="sr-only" role="status">Memuat...</span>
+  <div class="skeleton-content w-full" aria-hidden="true">
+    {% if view == 'board' %}
+      <div class="skeleton-board grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
+        {% for c in range(5) %}
+          <div class="skeleton-column bg-surface rounded-card border border-line p-3.5 flex flex-col gap-3">
+            <div class="skeleton-block bg-line rounded-input h-5 w-24 skeleton-shimmer"></div>
+            <div class="flex flex-col gap-2.5">
+              <div class="skeleton-block bg-line rounded-input h-20 w-full skeleton-shimmer"></div>
+              <div class="skeleton-block bg-line rounded-input h-24 w-full skeleton-shimmer"></div>
+              {% if c % 2 == 0 %}
+                <div class="skeleton-block bg-line rounded-input h-16 w-full skeleton-shimmer"></div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% elif view == 'list' %}
+      <div class="skeleton-list bg-surface rounded-card border border-line p-4 flex flex-col gap-3 w-full">
+        {% for _ in range(6) %}
+          <div class="skeleton-row flex items-center justify-between gap-4 py-2 border-b border-line last:border-b-0">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <div class="skeleton-block bg-line rounded-input h-4 w-1/3 min-w-[120px] skeleton-shimmer"></div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <div class="skeleton-block bg-line rounded-input h-6 w-16 skeleton-shimmer"></div>
+              <div class="skeleton-block bg-line rounded-input h-6 w-20 skeleton-shimmer"></div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% elif view == 'calendar' %}
+      <div class="skeleton-calendar hidden sm:grid sm:grid-cols-3 gap-5 w-full">
+        <div class="col-span-2 bg-surface rounded-card border border-line p-3.5 flex flex-col gap-3">
+          <div class="flex items-center justify-between pb-2 border-b border-line">
+            <div class="skeleton-block bg-line rounded-input h-6 w-32 skeleton-shimmer"></div>
+            <div class="flex gap-2">
+              <div class="skeleton-block bg-line rounded-input h-8 w-20 skeleton-shimmer"></div>
+              <div class="skeleton-block bg-line rounded-input h-8 w-16 skeleton-shimmer"></div>
+              <div class="skeleton-block bg-line rounded-input h-8 w-20 skeleton-shimmer"></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-7 gap-1">
+            {% for _ in range(7) %}
+              <div class="skeleton-block bg-line rounded-input h-4 w-full skeleton-shimmer"></div>
+            {% endfor %}
+          </div>
+          <div class="grid grid-cols-7 gap-1 flex-1">
+            {% for _ in range(35) %}
+              <div class="skeleton-block bg-line rounded-input h-16 w-full skeleton-shimmer"></div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-span-1 bg-surface rounded-card border border-line p-4 flex flex-col gap-3">
+          <div class="skeleton-block bg-line rounded-input h-6 w-36 skeleton-shimmer"></div>
+          <div class="skeleton-block bg-line rounded-input h-4 w-20 skeleton-shimmer"></div>
+          <div class="flex flex-col gap-2.5 mt-2">
+            <div class="skeleton-block bg-line rounded-input h-16 w-full skeleton-shimmer"></div>
+            <div class="skeleton-block bg-line rounded-input h-16 w-full skeleton-shimmer"></div>
+            <div class="skeleton-block bg-line rounded-input h-16 w-full skeleton-shimmer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skeleton-calendar-mobile block sm:hidden bg-surface rounded-card border border-line p-4 flex flex-col gap-3 w-full">
+        <div class="skeleton-block bg-line rounded-input h-6 w-32 skeleton-shimmer"></div>
+        <div class="skeleton-block bg-line rounded-input h-14 w-full skeleton-shimmer"></div>
+        <div class="skeleton-block bg-line rounded-input h-14 w-full skeleton-shimmer"></div>
+        <div class="skeleton-block bg-line rounded-input h-14 w-full skeleton-shimmer"></div>
+      </div>
+    {% elif view == 'gantt' %}
+      <div class="skeleton-gantt bg-surface rounded-card border border-line p-4 flex flex-col gap-3 w-full">
+        <div class="flex items-center justify-between pb-2 border-b border-line">
+          <div class="skeleton-block bg-line rounded-input h-6 w-32 skeleton-shimmer"></div>
+          <div class="skeleton-block bg-line rounded-input h-6 w-48 skeleton-shimmer"></div>
+        </div>
+        <div class="flex flex-col gap-3 mt-1">
+          {% for i in range(6) %}
+            <div class="flex items-center gap-4">
+              <div class="skeleton-block bg-line rounded-input h-5 w-32 flex-shrink-0 skeleton-shimmer"></div>
+              <div class="flex-1 bg-bg rounded-input p-1 h-7 flex items-center">
+                <div class="skeleton-block bg-line rounded-input h-5 skeleton-shimmer" style="width: {{ [30, 60, 45, 80, 50, 70][i] }}%;"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}

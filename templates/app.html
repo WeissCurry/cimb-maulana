@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui with context %}
+
+{% block title %}Daftar Tugas Harian{% endblock %}
+
+{% block navbar %}
+<header class="w-full bg-surface border-b border-line">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between min-h-[64px] py-3 gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <a href="/" class="flex items-center gap-3 no-underline">
+        <img src="/static/brand/cimb-niaga-logo.svg" alt="CIMB Niaga" height="24" class="h-6 w-auto flex-shrink-0">
+        <span class="h-5 w-px bg-line flex-shrink-0" aria-hidden="true"></span>
+        <h1 class="text-headline-4 sm:text-headline-3 font-bold text-ink leading-tight">Daftar Tugas Harian</h1>
+      </a>
+      {% if today is defined and today %}
+        {% if today.weekday is defined %}
+          {% set hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] %}
+          {% set bulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] %}
+          <span class="hidden md:inline-block h-3.5 w-px bg-line flex-shrink-0 mx-1" aria-hidden="true"></span>
+          <p class="hidden md:inline-block text-alt-paragraph text-muted font-medium">{{ hari[today.weekday()] }}, {{ today.day }} {{ bulan[today.month] }} {{ today.year }}</p>
+        {% else %}
+          <span class="hidden md:inline-block h-3.5 w-px bg-line flex-shrink-0 mx-1" aria-hidden="true"></span>
+          <p class="hidden md:inline-block text-alt-paragraph text-muted font-medium">{{ today }}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="flex items-center gap-3">
+      {{ ui.button("Tambah tugas", variant="primary", attrs={"id": "btn-open-create", "data-open-dialog": "dialog-create"}) }}
+    </div>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="app-shell flex flex-col gap-6 w-full min-w-0">
+  <div class="flex items-center justify-between gap-4 flex-wrap border-b border-line pb-4">
+    <nav class="view-tabs flex items-center gap-2 flex-wrap" role="tablist" aria-label="Tampilan tugas">
+      {{ ui.button("Kanban", href="/?view=board&priority=" ~ priority, variant="secondary", size="sm", attrs={"role": "tab", "id": "tab-board", "aria-controls": "view-board", "aria-selected": "true" if view == 'board' else "false", "data-view": "board"}) }}
+      {{ ui.button("Daftar", href="/?view=list&priority=" ~ priority, variant="secondary", size="sm", attrs={"role": "tab", "id": "tab-list", "aria-controls": "view-list", "aria-selected": "true" if view == 'list' else "false", "data-view": "list"}) }}
+      {{ ui.button("Kalender", href="/?view=calendar&priority=" ~ priority, variant="secondary", size="sm", attrs={"role": "tab", "id": "tab-calendar", "aria-controls": "view-calendar", "aria-selected": "true" if view == 'calendar' else "false", "data-view": "calendar"}) }}
+      {{ ui.button("Gantt", href="/?view=gantt&priority=" ~ priority, variant="secondary", size="sm", attrs={"role": "tab", "id": "tab-gantt", "aria-controls": "view-gantt", "aria-selected": "true" if view == 'gantt' else "false", "data-view": "gantt"}) }}
+    </nav>
+
+    <section class="priority-toolbar flex items-center" aria-label="Penyaring prioritas">
+      <div class="filter-row flex items-center gap-1.5 flex-wrap">
+        <span class="text-alt-paragraph font-semibold text-muted mr-1">Prioritas:</span>
+        {{ ui.button("Semua", href="/?view=" ~ view ~ "&priority=all", variant="primary" if priority == "all" else "secondary", size="sm", attrs={"aria-current": "true" if priority == "all" else "false"}) }}
+        {{ ui.button("Rendah", href="/?view=" ~ view ~ "&priority=low", variant="primary" if priority == "low" else "secondary", size="sm", attrs={"aria-current": "true" if priority == "low" else "false"}) }}
+        {{ ui.button("Sedang", href="/?view=" ~ view ~ "&priority=medium", variant="primary" if priority == "medium" else "secondary", size="sm", attrs={"aria-current": "true" if priority == "medium" else "false"}) }}
+        {{ ui.button("Tinggi", href="/?view=" ~ view ~ "&priority=high", variant="primary" if priority == "high" else "secondary", size="sm", attrs={"aria-current": "true" if priority == "high" else "false"}) }}
+      </div>
+    </section>
+  </div>
+
+  <div class="app-views w-full min-w-0">
+    <section id="view-board" class="view-panel {% if view == 'board' %}is-active{% endif %}" role="tabpanel" aria-labelledby="tab-board">
+      {% include "views/board.html" %}
+    </section>
+
+    <section id="view-list" class="view-panel {% if view == 'list' %}is-active{% endif %}" role="tabpanel" aria-labelledby="tab-list">
+      {% include "views/list.html" ignore missing %}
+    </section>
+
+    <section id="view-calendar" class="view-panel {% if view == 'calendar' %}is-active{% endif %}" role="tabpanel" aria-labelledby="tab-calendar">
+      {% include "views/calendar.html" %}
+    </section>
+
+    <section id="view-gantt" class="view-panel {% if view == 'gantt' %}is-active{% endif %}" role="tabpanel" aria-labelledby="tab-gantt">
+      {% include "views/gantt.html" ignore missing %}
+    </section>
+  </div>
+
+  <!-- Template Kerangka Pemuatan (Loading Skeletons) -->
+  <template id="skeleton-board">{{ ui.skeleton('board') }}</template>
+  <template id="skeleton-list">{{ ui.skeleton('list') }}</template>
+  <template id="skeleton-calendar">{{ ui.skeleton('calendar') }}</template>
+  <template id="skeleton-gantt">{{ ui.skeleton('gantt') }}</template>
+
+  {% include "dialogs/create.html" %}
+
+  {% if tasks %}
+    {% for task in tasks %}
+      {% include "dialogs/task.html" %}
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

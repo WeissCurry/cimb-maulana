@@ -1,0 +1,54 @@
+{% import "components/ui.html" as ui with context %}
+
+<div class="list-container w-full min-w-0">
+  {% if tasks and tasks|length > 0 %}
+    <div class="list-table w-full min-w-0">
+      <div class="list-header min-w-0" aria-hidden="true">
+        <div class="list-header-cell list-col--title min-w-0">Judul Tugas</div>
+        <div class="list-header-cell list-col--stage">Status</div>
+        <div class="list-header-cell list-col--priority">Prioritas</div>
+        <div class="list-header-cell list-col--due">Tenggat Waktu</div>
+        <div class="list-header-cell list-col--overdue">Kondisi</div>
+      </div>
+
+      <div class="list-body w-full min-w-0">
+        {% for t in tasks %}
+          <a href="/?task={{ t.id }}" data-open-task="{{ t.id }}" class="list-row min-w-0 {% if t.is_overdue %}list-row--overdue{% endif %} {% if t.status == 'done' %}list-row--done{% endif %}" aria-label="Tugas: {{ t.title }}">
+            <div class="list-cell list-col--title min-w-0">
+              <span class="list-title wrap-anywhere">{{ t.title }}</span>
+            </div>
+            <div class="list-cell list-col--stage">
+              <span class="list-label-mobile">Status:</span>
+              {{ ui.stage_badge(t.status) }}
+            </div>
+            <div class="list-cell list-col--priority">
+              <span class="list-label-mobile">Prioritas:</span>
+              {{ ui.priority_chip(t.priority) }}
+            </div>
+            <div class="list-cell list-col--due">
+              <span class="list-label-mobile">Tenggat:</span>
+              <span class="list-due-text">
+                {% if t.due_date %}
+                  {{ t.due_date|tanggal if t.due_date.strftime is defined else t.due_date }}
+                {% else %}
+                  <span class="list-undated">Tanpa tenggat</span>
+                {% endif %}
+              </span>
+            </div>
+            <div class="list-cell list-col--overdue">
+              {% if t.is_overdue %}
+                <span class="list-overdue-chip">Lewat tenggat</span>
+              {% elif t.status == 'done' %}
+                <span class="list-done-chip">Selesai</span>
+              {% else %}
+                <span class="list-ontime-text">Tepat waktu</span>
+              {% endif %}
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% else %}
+    {{ ui.empty_state("Belum ada tugas yang tersedia.") }}
+  {% endif %}
+</div>

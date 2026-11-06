@@ -1,0 +1,282 @@
+{% import "components/ui.html" as ui with context %}
+
+{% set hari_nama = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] %}
+{% set bulan_nama = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] %}
+{% set bulan_singkat = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'] %}
+
+{# Default active date: today if in month, else first day with tasks. #}
+{% set ns = namespace(default_day=None, default_day_obj=None, first_day_with_tasks=None, first_day_with_tasks_obj=None, first_day_in_month=None, first_day_in_month_obj=None) %}
+{% for week in calendar.weeks %}
+  {% for day in week %}
+    {% if day.in_month %}
+      {% if ns.first_day_in_month is none %}
+        {% set ns.first_day_in_month = day.date.strftime('%Y-%m-%d') %}
+        {% set ns.first_day_in_month_obj = day %}
+      {% endif %}
+      {% if day.is_today and ns.default_day is none %}
+        {% set ns.default_day = day.date.strftime('%Y-%m-%d') %}
+        {% set ns.default_day_obj = day %}
+      {% endif %}
+      {% if day.tasks and ns.first_day_with_tasks is none %}
+        {% set ns.first_day_with_tasks = day.date.strftime('%Y-%m-%d') %}
+        {% set ns.first_day_with_tasks_obj = day %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+{% if ns.default_day is none %}
+  {% if ns.first_day_with_tasks is not none %}
+    {% set ns.default_day = ns.first_day_with_tasks %}
+    {% set ns.default_day_obj = ns.first_day_with_tasks_obj %}
+  {% else %}
+    {% set ns.default_day = ns.first_day_in_month %}
+    {% set ns.default_day_obj = ns.first_day_in_month_obj %}
+  {% endif %}
+{% endif %}
+
+{% set selected_key = ns.default_day %}
+{% set selected_day_data = ns.default_day_obj %}
+
+<div class="calendar-view-content w-full">
+  <div class="calendar-desktop-view hidden sm:flex flex-col lg:grid lg:grid-cols-3 gap-5">
+    <div class="cal-month-box lg:col-span-2 card card--clay p-3.5 flex flex-col h-full overflow-hidden">
+      <div class="calendar-card-header flex items-center justify-between pb-3 mb-2 border-b border-line gap-2 flex-wrap flex-shrink-0">
+        <h2 class="calendar-title text-headline-4 sm:text-headline-3 font-bold text-ink">{{ calendar.month_label }}</h2>
+        <nav class="calendar-header__nav flex items-center gap-1.5 sm:gap-2 flex-wrap" aria-label="Navigasi bulan kalender">
+          {{ ui.button("Bulan sebelumnya", href="/?view=calendar&month=" ~ calendar.prev_month ~ "&priority=" ~ priority, variant="secondary", size="sm") }}
+          {{ ui.button("Bulan ini", href="/?view=calendar&priority=" ~ priority, variant="secondary", size="sm") }}
+          {{ ui.button("Bulan berikutnya", href="/?view=calendar&month=" ~ calendar.next_month ~ "&priority=" ~ priority, variant="secondary", size="sm") }}
+        </nav>
+      </div>
+
+      <div class="grid grid-cols-7 gap-1 text-center font-bold text-alt-paragraph text-muted pb-2 border-b border-line flex-shrink-0" role="row">
+        <span>Sen</span>
+        <span>Sel</span>
+        <span>Rab</span>
+        <span>Kam</span>
+        <span>Jum</span>
+        <span>Sab</span>
+        <span>Min</span>
+      </div>
+
+      <div class="cal-month-grid grid grid-cols-7 gap-1 flex-1 min-h-0 mt-2" style="grid-auto-rows: minmax(0, 1fr); grid-template-rows: repeat({{ calendar.weeks|length }}, minmax(0, 1fr));" role="grid" aria-label="Kisi hari kalender">
+        {% for week in calendar.weeks %}
+          {% for day in week %}
+            {% set d_str = day.date.strftime('%Y-%m-%d') %}
+            {% set is_sel = (d_str == selected_key) %}
+            <button
+              type="button"
+              class="cal-day-cell text-left p-1.5 rounded-[6px] border border-line bg-surface hover:bg-bg transition-colors flex flex-col justify-start min-w-0 min-h-0 overflow-hidden w-full h-full {% if not day.in_month %}opacity-40 bg-bg/50{% endif %} {% if day.is_today %}cal-day-cell--today{% endif %} {% if is_sel %}is-selected{% endif %}"
+              data-day="{{ d_str }}"
+              aria-pressed="{{ 'true' if is_sel else 'false' }}"
+              aria-label="{{ hari_nama[day.date.weekday()] }}, {{ day.date.day }} {{ bulan_singkat[day.date.month] }} {{ day.date.year }}: {{ day.tasks|length }} tugas"
+            >
+              <div class="flex items-center justify-between w-full mb-1">
+                <span class="text-alt-paragraph font-bold text-ink leading-none">{{ day.date.day }}</span>
+                {% if day.is_today %}
+                  <span class="text-[10px] font-bold text-brand-red uppercase leading-none">Hari ini</span>
+                {% endif %}
+              </div>
+              <div class="flex flex-col gap-1 w-full min-w-0 overflow-hidden flex-1">
+                {% for t in day.tasks[:2] %}
+                  <span class="truncate text-[11px] leading-tight px-1 py-0.5 rounded-[4px] bg-bg border border-line text-ink font-medium w-full block" title="{{ t.title }}">
+                    {{ t.title }}
+                  </span>
+                {% endfor %}
+                {% if day.tasks|length > 2 %}
+                  <span class="text-[10px] text-muted font-semibold truncate leading-none mt-0.5">
+                    +{{ day.tasks|length - 2 }} lainnya
+                  </span>
+                {% endif %}
+              </div>
+            </button>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <aside id="calendar-day-panel" class="cal-day-panel lg:col-span-1 card card--clay p-4 flex flex-col h-full overflow-hidden" aria-label="Panel tugas tanggal terpilih">
+      <div id="cal-selected-day-container" class="flex-1 overflow-y-auto min-h-0 pr-1 flex flex-col gap-3">
+        {% if selected_day_data %}
+          <div class="cal-panel-header pb-3 mb-1 border-b border-line flex items-center justify-between">
+            <div>
+              <h3 class="text-headline-4 font-bold text-ink leading-tight">
+                {{ hari_nama[selected_day_data.date.weekday()] }}, {{ selected_day_data.date.day }} {{ bulan_nama[selected_day_data.date.month] }} {{ selected_day_data.date.year }}
+              </h3>
+              <p class="text-alt-paragraph text-muted mt-0.5 font-medium">
+                {{ selected_day_data.tasks|length }} tugas
+              </p>
+            </div>
+            {% if selected_day_data.is_today %}
+              <span class="badge text-alt-paragraph font-bold text-brand-red border border-brand-red bg-transparent">Hari ini</span>
+            {% endif %}
+          </div>
+
+          {% if not selected_day_data.tasks %}
+            <p class="text-alt-paragraph text-muted py-6 text-center">Tidak ada tugas bertenggat pada tanggal ini.</p>
+          {% else %}
+            <div class="flex flex-col gap-2.5 min-w-0">
+              {% for t in selected_day_data.tasks %}
+                <article class="p-3 bg-surface rounded-card border border-line shadow-clay flex flex-col gap-2 min-w-0">
+                  <div class="flex items-start justify-between gap-2 min-w-0 flex-wrap">
+                    <h4 class="text-paragraph font-semibold leading-snug min-w-0 flex-1 [overflow-wrap:anywhere] break-words">
+                      <a href="/?task={{ t.id }}&view=calendar" data-open-task="{{ t.id }}" class="text-ink hover:underline [overflow-wrap:anywhere] break-words">
+                        {{ t.title }}
+                      </a>
+                    </h4>
+                    {{ ui.priority_chip(t.priority) }}
+                  </div>
+                  <div class="flex items-center justify-between gap-2 text-alt-paragraph min-w-0 flex-wrap">
+                    {{ ui.stage_badge(t.status) }}
+                    {% if t.due_date %}
+                      <span class="text-muted min-w-0">
+                        Tenggat: {{ t.due_date|tanggal if t.due_date.strftime is defined else t.due_date }}
+                        {% if t.is_overdue %}
+                          <span class="chip chip--overdue text-alt-paragraph ml-1">Lewat tenggat</span>
+                        {% endif %}
+                      </span>
+                    {% endif %}
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <div class="cal-undated-section pt-3 border-t border-line flex-shrink-0 flex flex-col gap-2">
+        <h3 class="text-headline-4 font-bold text-ink">
+          Tanpa tenggat <span class="text-alt-paragraph font-medium text-muted">({{ calendar.undated|length if calendar.undated else 0 }})</span>
+        </h3>
+        {% if not calendar.undated %}
+          <p class="text-alt-paragraph text-muted">Semua tugas memiliki tenggat waktu.</p>
+        {% else %}
+          <div class="flex flex-col gap-2 max-h-[140px] overflow-y-auto pr-1 min-w-0">
+            {% for t in calendar.undated %}
+              <div class="p-2.5 bg-bg rounded-btn border border-line flex items-center justify-between gap-2 text-alt-paragraph min-w-0 flex-wrap">
+                <a href="/?task={{ t.id }}&view=calendar" data-open-task="{{ t.id }}" class="text-ink font-semibold hover:underline min-w-0 flex-1 [overflow-wrap:anywhere] break-words">
+                  {{ t.title }}
+                </a>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                  {{ ui.stage_badge(t.status) }}
+                  {{ ui.priority_chip(t.priority) }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+
+  <!-- Server-rendered per-day panels swapped into the view by client script. -->
+  <div class="cal-day-templates hidden" aria-hidden="true">
+    {% for week in calendar.weeks %}
+      {% for day in week %}
+        {% set d_str = day.date.strftime('%Y-%m-%d') %}
+        <template data-day="{{ d_str }}">
+          <div class="cal-panel-header pb-3 mb-1 border-b border-line flex items-center justify-between">
+            <div>
+              <h3 class="text-headline-4 font-bold text-ink leading-tight">
+                {{ hari_nama[day.date.weekday()] }}, {{ day.date.day }} {{ bulan_nama[day.date.month] }} {{ day.date.year }}
+              </h3>
+              <p class="text-alt-paragraph text-muted mt-0.5 font-medium">
+                {{ day.tasks|length }} tugas
+              </p>
+            </div>
+            {% if day.is_today %}
+              <span class="badge text-alt-paragraph font-bold text-brand-red border border-brand-red bg-transparent">Hari ini</span>
+            {% endif %}
+          </div>
+
+          {% if not day.tasks %}
+            <p class="text-alt-paragraph text-muted py-6 text-center">Tidak ada tugas bertenggat pada tanggal ini.</p>
+          {% else %}
+            <div class="flex flex-col gap-2.5 min-w-0">
+              {% for t in day.tasks %}
+                <article class="p-3 bg-surface rounded-card border border-line shadow-clay flex flex-col gap-2 min-w-0">
+                  <div class="flex items-start justify-between gap-2 min-w-0 flex-wrap">
+                    <h4 class="text-paragraph font-semibold leading-snug min-w-0 flex-1 [overflow-wrap:anywhere] break-words">
+                      <a href="/?task={{ t.id }}&view=calendar" data-open-task="{{ t.id }}" class="text-ink hover:underline [overflow-wrap:anywhere] break-words">
+                        {{ t.title }}
+                      </a>
+                    </h4>
+                    {{ ui.priority_chip(t.priority) }}
+                  </div>
+                  <div class="flex items-center justify-between gap-2 text-alt-paragraph min-w-0 flex-wrap">
+                    {{ ui.stage_badge(t.status) }}
+                    {% if t.due_date %}
+                      <span class="text-muted min-w-0">
+                        Tenggat: {{ t.due_date|tanggal if t.due_date.strftime is defined else t.due_date }}
+                        {% if t.is_overdue %}
+                          <span class="chip chip--overdue text-alt-paragraph ml-1">Lewat tenggat</span>
+                        {% endif %}
+                      </span>
+                    {% endif %}
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </template>
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  <div class="calendar-agenda-view block sm:hidden">
+    <div class="calendar-agenda-header flex items-center justify-between mb-3.5 gap-2 flex-wrap">
+      <h3 class="agenda-title text-headline-4 font-bold text-ink">{{ calendar.month_label }}</h3>
+      <nav class="calendar-agenda-nav flex items-center gap-1.5 flex-wrap" aria-label="Navigasi bulan kalender">
+        {{ ui.button("Bulan sebelumnya", href="/?view=calendar&month=" ~ calendar.prev_month ~ "&priority=" ~ priority, variant="secondary", size="sm") }}
+        {{ ui.button("Bulan ini", href="/?view=calendar&priority=" ~ priority, variant="secondary", size="sm") }}
+        {{ ui.button("Bulan berikutnya", href="/?view=calendar&month=" ~ calendar.next_month ~ "&priority=" ~ priority, variant="secondary", size="sm") }}
+      </nav>
+    </div>
+    {% set days_with_tasks = [] %}
+    {% for week in calendar.weeks %}
+      {% for day in week %}
+        {% if day.in_month and (day.tasks or day.is_today) %}
+          {% if days_with_tasks.append(day) %}{% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+
+    {% if not days_with_tasks %}
+      {{ ui.empty_state("Belum ada tugas bertenggat di bulan ini.") }}
+    {% else %}
+      <div class="agenda-list flex flex-col gap-3">
+        {% for day in days_with_tasks %}
+          <article class="agenda-day card card--clay p-4 flex flex-col gap-2.5 {% if day.is_today %}ring-2 ring-brand-red{% endif %}">
+            <header class="agenda-day__header flex items-center justify-between pb-2 border-b border-line">
+              <h4 class="agenda-day__date text-headline-4 font-bold text-ink">
+                {{ day.date.day }} {{ bulan_singkat[day.date.month] }} {{ day.date.year }}
+              </h4>
+              {% if day.is_today %}
+                <span class="badge-current text-alt-paragraph font-bold text-brand-red">Hari ini</span>
+              {% endif %}
+            </header>
+
+            {% if not day.tasks %}
+              <p class="agenda-day__empty text-alt-paragraph text-muted">Tidak ada tugas bertenggat pada hari ini.</p>
+            {% else %}
+              <ul class="agenda-task-list flex flex-col gap-2 min-w-0" role="list">
+                {% for t in day.tasks %}
+                  <li class="agenda-task-item min-w-0">
+                    <a href="/?task={{ t.id }}&view=calendar" data-open-task="{{ t.id }}" class="agenda-task-link flex items-center justify-between gap-2 p-2.5 rounded-btn bg-bg border border-line text-ink no-underline flex-wrap min-w-0">
+                      <span class="agenda-task-title text-paragraph font-semibold flex-1 min-w-0 [overflow-wrap:anywhere] break-words">{{ t.title }}</span>
+                      <div class="agenda-task-tags flex items-center gap-1.5 flex-shrink-0">
+                        {{ ui.stage_badge(t.status) }}
+                        {{ ui.priority_chip(t.priority) }}
+                      </div>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>

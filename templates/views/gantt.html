@@ -1,0 +1,99 @@
+{% import "components/ui.html" as ui with context %}
+
+{% set months_id = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] %}
+{% set days_id_short = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] %}
+{% set has_rows = gantt and gantt.rows and gantt.rows|length > 0 %}
+{% set has_undated = gantt and gantt.undated and gantt.undated|length > 0 %}
+
+<div class="gantt-container">
+  {% if gantt and gantt.days and gantt.days|length > 0 and (has_rows or has_undated) %}
+    <div class="gantt-scroll" tabindex="0" role="region" aria-label="Bagan Gantt linimasa tugas">
+      <div class="gantt-grid" style="grid-template-columns: var(--gantt-title-w) repeat({{ gantt.days|length }}, minmax(36px, 1fr));">
+        
+        <div class="gantt-header-corner" style="grid-column: 1; grid-row: 1 / span 2;">
+          <span class="gantt-corner-label">Tugas</span>
+        </div>
+
+        {% set ns = namespace(col=2) %}
+        {% for m, m_days in gantt.days|groupby('month') %}
+          <div class="gantt-header-month" style="grid-column: {{ ns.col }} / span {{ m_days|length }}; grid-row: 1;">
+            {{ months_id[m_days[0].month] }} {{ m_days[0].year }}
+          </div>
+          {% set ns.col = ns.col + m_days|length %}
+        {% endfor %}
+
+        {% for day in gantt.days %}
+          <div class="gantt-header-day {% if loop.index0 == gantt.today_index %}gantt-header-day--today{% endif %} {% if day.day == 1 and not loop.first %}gantt-header-day--month-start{% endif %}" style="grid-column: {{ loop.index0 + 2 }}; grid-row: 2;">
+            <span class="gantt-day-num">{{ day.day }}</span>
+            <span class="gantt-day-name">{{ days_id_short[day.weekday()] }}</span>
+          </div>
+        {% endfor %}
+
+        {% for day in gantt.days %}
+          {% if day.day == 1 and not loop.first %}
+            <div class="gantt-month-line" style="grid-column: {{ loop.index0 + 2 }}; grid-row: 2 / -1;" aria-hidden="true"></div>
+          {% endif %}
+        {% endfor %}
+
+        {% if gantt.today_index is not none and gantt.today_index >= 0 and gantt.today_index < gantt.days|length %}
+          <div class="gantt-today-line" style="grid-column: {{ gantt.today_index + 2 }}; grid-row: 1 / -1;" aria-hidden="true"></div>
+        {% endif %}
+
+        {% if has_rows %}
+          {% for r in gantt.rows %}
+            {% set t = r.task %}
+            {% set row_idx = loop.index + 2 %}
+            {% set start_col = (r.start_index if r.start_index >= 0 else 0) + 2 %}
+            {% set span_cols = r.span if r.span >= 1 else 1 %}
+
+            <div class="gantt-row-bg" style="grid-column: 1 / -1; grid-row: {{ row_idx }};" aria-hidden="true"></div>
+
+            <a href="/?task={{ t.id }}" data-open-task="{{ t.id }}" class="gantt-title-cell" style="grid-column: 1; grid-row: {{ row_idx }};" title="{{ t.title }}">
+              <span class="gantt-title-text">{{ t.title }}</span>
+              <span class="gantt-title-badge">
+                {{ ui.stage_badge(t.status) }}
+              </span>
+            </a>
+
+            <div class="gantt-bar-slot" style="grid-column: {{ start_col }} / span {{ span_cols }}; grid-row: {{ row_idx }};">
+              <a href="/?task={{ t.id }}" data-open-task="{{ t.id }}" class="gantt-bar {% if t.status == 'done' %}gantt-bar--done{% endif %} {% if t.is_overdue %}gantt-bar--overdue{% endif %}" title="{{ t.title }}" aria-label="{{ t.title }}">
+                {% if span_cols >= 3 %}
+                  <span class="gantt-bar-label">{{ t.title }}</span>
+                {% endif %}
+              </a>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="gantt-row-bg" style="grid-column: 1 / -1; grid-row: 3;" aria-hidden="true"></div>
+          <div class="gantt-title-cell text-muted italic text-xs" style="grid-column: 1; grid-row: 3;">
+            Tanpa tenggat
+          </div>
+          <div class="gantt-bar-slot text-muted text-xs italic px-3" style="grid-column: 2 / -1; grid-row: 3;">
+            Semua tugas berada pada daftar tanpa tenggat di bawah ini.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if has_undated %}
+      <div class="gantt-undated">
+        <h3 class="gantt-undated-heading">Tanpa tenggat ({{ gantt.undated|length }})</h3>
+        <p class="gantt-undated-desc">Tugas berikut tidak memiliki tenggat waktu sehingga dicantumkan terpisah dari linimasa.</p>
+        <div class="gantt-undated-list">
+          {% for t in gantt.undated %}
+            <a href="/?task={{ t.id }}" data-open-task="{{ t.id }}" class="gantt-undated-item">
+              <span class="gantt-undated-title">{{ t.title }}</span>
+              <div class="gantt-undated-meta">
+                {{ ui.priority_chip(t.priority) }}
+                {{ ui.stage_badge(t.status) }}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    {{ ui.empty_state("Belum ada data tugas untuk tampilan Gantt.") }}
+  {% endif %}
+</div>

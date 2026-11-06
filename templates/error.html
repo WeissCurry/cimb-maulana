@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "components/ui.html" as ui with context %}
+
+{% block title %}Kesalahan {{ code }} - Daftar Tugas Harian{% endblock %}
+
+{% block navbar %}
+<header class="w-full bg-surface border-b border-line">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between min-h-[64px] py-3 gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <a href="/" class="flex items-center gap-3 no-underline">
+        <img src="/static/brand/cimb-niaga-logo.svg" alt="CIMB Niaga" height="24" class="h-6 w-auto flex-shrink-0">
+        <span class="h-5 w-px bg-line flex-shrink-0" aria-hidden="true"></span>
+        <h1 class="text-headline-4 sm:text-headline-3 font-bold text-ink leading-tight">Daftar Tugas Harian</h1>
+      </a>
+    </div>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="error-page max-w-lg mx-auto my-10 text-center">
+  <div class="error-card card card--clay p-8 flex flex-col items-center gap-4">
+    <span class="error-badge text-headline-1 font-bold text-ink leading-none">{{ code }}</span>
+    <h2 class="error-heading text-headline-3 sm:text-headline-2 font-bold">Terjadi Kesalahan</h2>
+    <p class="error-description text-paragraph text-muted leading-normal">{{ message }}</p>
+    <div class="error-actions mt-4">
+      {{ ui.button("Kembali ke Papan", href="/", variant="primary") }}
+    </div>
+  </div>
+</div>
+{% endblock %}

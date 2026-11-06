@@ -1,0 +1,61 @@
+{% import "components/ui.html" as ui with context %}
+{% set total_filtered_tasks = columns|map(attribute='tasks')|map('length')|sum if columns else 0 %}
+{% if counts and counts.get('all', 0) == 0 %}
+  {{ ui.empty_state("Belum ada tugas. Tulis tugas pertama di form.") }}
+{% elif total_filtered_tasks == 0 and priority != 'all' %}
+  {{ ui.empty_state("Tidak ada tugas dengan filter ini.", action_label="Atur ulang filter", action_href="/?view=board") }}
+{% else %}
+  <nav class="board-stage-nav flex sm:hidden flex-wrap gap-2 mb-4" aria-label="Navigasi cepat tahap tugas">
+    {% for col in columns %}
+      {{ ui.button(col.label ~ " (" ~ col.tasks|length ~ ")", href="#col-" ~ col.key, variant="secondary", size="sm", attrs={"data-stage-jump": col.key, "class": "stage-jump-btn"}) }}
+    {% endfor %}
+  </nav>
+
+  <div class="board-wrapper xl:overflow-x-visible">
+    <div class="board xl:grid xl:grid-cols-5 xl:gap-4 xl:w-full xl:overflow-visible" role="region" aria-label="Papan tugas kanban">
+      {% for col in columns %}
+        <section class="board__column xl:w-full xl:min-w-0 xl:max-w-none xl:flex-none" id="col-{{ col.key }}" data-stage-key="{{ col.key }}" aria-labelledby="heading-col-{{ col.key }}">
+          <header class="board__column-header">
+            <h3 id="heading-col-{{ col.key }}" class="board__column-title text-headline-4 font-bold text-ink">
+              {{ col.label }} <span class="board__column-count text-alt-paragraph font-medium text-muted">({{ col.tasks|length }})</span>
+            </h3>
+          </header>
+
+          <div class="board__column-body">
+            {% if not col.tasks %}
+              <p class="board__column-empty text-alt-paragraph text-muted">Kosong.</p>
+            {% else %}
+              <div class="board__task-list">
+                {% for task in col.tasks %}
+                  <article class="card card--task card--clay min-w-0" draggable="true" data-task-id="{{ task.id }}">
+                    <div class="card--task__header min-w-0 flex flex-wrap items-start justify-between gap-2">
+                      <h4 class="card--task__title text-paragraph font-semibold leading-snug min-w-0 flex-1 [overflow-wrap:anywhere] break-words">
+                        <a href="/?task={{ task.id }}&view={{ view }}" data-open-task="{{ task.id }}" class="card--task__link text-ink hover:underline [overflow-wrap:anywhere] break-words">{{ task.title }}</a>
+                      </h4>
+                      {{ ui.priority_chip(task.priority) }}
+                    </div>
+
+                    {% if task.due_date %}
+                      <div class="card--task__meta text-alt-paragraph text-muted">
+                        <span class="task-due {% if task.is_overdue %}task-due--overdue{% endif %}">
+                          Tenggat: {{ task.due_date|tanggal if task.due_date.strftime is defined else task.due_date }}
+                          {% if task.is_overdue %}
+                            <span class="chip chip--overdue text-alt-paragraph">Lewat tenggat</span>
+                          {% endif %}
+                        </span>
+                      </div>
+                    {% endif %}
+
+                    <div class="card--task__actions">
+                      {{ ui.move_form(task, next="/?view=" ~ view, show_select=false) }}
+                    </div>
+                  </article>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}

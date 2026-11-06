@@ -1,0 +1,114 @@
+{% import "components/ui.html" as ui with context %}
+<dialog id="task-{{ task.id }}" class="dialog dialog--sheet dialog--task" {% if open_dialog == 'task-' ~ task.id %}data-autoopen="true"{% endif %} aria-labelledby="dialog-task-title-{{ task.id }}">
+  <div class="dialog__content card card--clay">
+    <header class="dialog__header min-w-0 flex flex-wrap items-start justify-between gap-3">
+      <div class="dialog__header-info min-w-0 flex-1">
+        <h2 id="dialog-task-title-{{ task.id }}" class="dialog__title text-headline-3 font-bold leading-tight min-w-0 [overflow-wrap:anywhere] break-words">{{ task.title }}</h2>
+        <div class="dialog__badges min-w-0 flex flex-wrap items-center gap-2 mt-2">
+          {{ ui.stage_badge(task.status) }}
+          {{ ui.priority_chip(task.priority) }}
+          {% if task.due_date %}
+            <span class="task-due text-paragraph text-muted inline-flex items-center gap-1.5 flex-wrap min-w-0 {% if task.is_overdue %}task-due--overdue{% endif %}">
+              Tenggat: {{ task.due_date|tanggal if task.due_date.strftime is defined else task.due_date }}
+              {% if task.is_overdue %}
+                <span class="chip chip--overdue text-alt-paragraph">Lewat tenggat</span>
+              {% endif %}
+            </span>
+          {% endif %}
+        </div>
+      </div>
+      {{ ui.button("Tutup", variant="secondary", size="sm", attrs={"type": "button", "data-close-dialog": "true", "class": "dialog__close-btn flex-shrink-0", "aria-label": "Tutup dialog"}) }}
+    </header>
+
+    <div class="dialog__body">
+      {% if task.description %}
+        <section class="dialog__section" aria-labelledby="desc-heading-{{ task.id }}">
+          <h3 id="desc-heading-{{ task.id }}" class="dialog__section-title">Deskripsi</h3>
+          <p class="dialog__desc-text">{{ task.description }}</p>
+        </section>
+      {% endif %}
+
+      <section class="dialog__section" aria-labelledby="move-heading-{{ task.id }}">
+        <h3 id="move-heading-{{ task.id }}" class="dialog__section-title">Ubah Tahap</h3>
+        <form method="POST" action="/tasks/{{ task.id }}/move" class="form-move form-move--dialog">
+          <input type="hidden" name="next" value="/?view={{ view }}&task={{ task.id }}">
+          <div class="move-select-row">
+            <label for="move-select-dlg-{{ task.id }}" class="sr-only">Pilih tahap status</label>
+            <select name="status" id="move-select-dlg-{{ task.id }}" class="field__input field__input--select">
+              {% set stage_list = stages if stages is defined else [('todo', 'Belum Mulai'), ('in_progress', 'Dikerjakan'), ('ready', 'Siap Dicek'), ('review', 'Review'), ('done', 'Selesai')] %}
+              {% for s in stage_list %}
+                <option value="{{ s[0] }}" {% if s[0] == task.status %}selected{% endif %}>{{ s[1] }}</option>
+              {% endfor %}
+            </select>
+            {{ ui.button("Pindah", variant="secondary", type="submit", size="sm") }}
+          </div>
+        </form>
+      </section>
+
+      {% set task_timeline = timelines.get(task.id) if timelines is defined and timelines else None %}
+      <section class="dialog__section timeline-section" aria-labelledby="timeline-heading-{{ task.id }}">
+        <h3 id="timeline-heading-{{ task.id }}" class="dialog__section-title">Riwayat Linimasa</h3>
+        {% if task_timeline %}
+          {% set total_minutes = task_timeline|map(attribute='duration_minutes')|sum %}
+          <p class="timeline-total">Total durasi: <strong>{{ total_minutes|durasi }}</strong></p>
+          <ol class="timeline" role="list">
+            {% for item in task_timeline %}
+              {% set is_current = (item.left_at is none) or loop.last %}
+              <li class="timeline__item {% if is_current %}timeline__item--current{% endif %}">
+                <div class="timeline__marker" aria-hidden="true"></div>
+                <div class="timeline__content card">
+                  <div class="timeline__header">
+                    <h4 class="timeline__stage">{{ item.label }}</h4>
+                    {% if is_current %}
+                      <span class="chip chip--overdue">Saat ini</span>
+                    {% endif %}
+                  </div>
+                  <p class="timeline__meta">masuk {{ item.entered_at|wib if item.entered_at else '' }}</p>
+                  <p class="timeline__duration">Durasi: {{ item.duration_minutes|durasi }}</p>
+                </div>
+              </li>
+            {% endfor %}
+          </ol>
+        {% else %}
+          <p class="timeline-empty">Belum ada riwayat tahap.</p>
+        {% endif %}
+      </section>
+
+      <section class="dialog__section">
+        <details class="task-dialog__edit-details card">
+          <summary class="task-dialog__edit-summary">
+            <span>Ubah tugas</span>
+          </summary>
+          <div class="task-dialog__edit-body">
+            <form method="POST" action="/tasks/{{ task.id }}/edit" class="task-form" novalidate>
+              <input type="hidden" name="next" value="/?view={{ view }}&task={{ task.id }}">
+              {{ ui.field("title", "Judul tugas", type="text", value=task.title, required=true) }}
+              {{ ui.field("description", "Deskripsi", type="textarea", value=task.description or '', rows=3) }}
+              {{ ui.field("due_date", "Tenggat waktu", type="date", value=task.due_date.strftime('%Y-%m-%d') if task.due_date and task.due_date.strftime is defined else (task.due_date or '')) }}
+              {{ ui.field("priority", "Prioritas", type="select", value=task.priority, options=[('low', 'Rendah'), ('medium', 'Sedang'), ('high', 'Tinggi')]) }}
+              {{ ui.field("status", "Status tahap", type="select", value=task.status, options=stages if stages is defined else [('todo', 'Belum Mulai'), ('in_progress', 'Dikerjakan'), ('ready', 'Siap Dicek'), ('review', 'Review'), ('done', 'Selesai')]) }}
+              <div class="dialog__actions">
+                {{ ui.button("Simpan perubahan", variant="primary", type="submit") }}
+              </div>
+            </form>
+          </div>
+        </details>
+      </section>
+
+      <section class="dialog__section dialog__danger-zone">
+        <details class="delete-confirm-details">
+          <summary class="delete-trigger-summary">
+            {{ ui.button("Hapus tugas ini", variant="danger", type="button", size="sm") }}
+          </summary>
+          <div class="delete-confirm-box card">
+            <p class="delete-confirm-text">Yakin ingin menghapus tugas ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <form method="POST" action="/tasks/{{ task.id }}/delete" class="delete-form">
+              <input type="hidden" name="next" value="/?view={{ view }}">
+              {{ ui.button("Ya, hapus permanen", variant="danger", type="submit", size="sm", attrs={"data-task-id": task.id, "data-task-title": task.title, "class": "btn-delete"}) }}
+            </form>
+          </div>
+        </details>
+      </section>
+    </div>
+  </div>
+</dialog>

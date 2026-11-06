@@ -1,0 +1,23 @@
+{% import "components/ui.html" as ui with context %}
+<dialog id="dialog-create" class="dialog dialog--sheet" {% if open_dialog == 'create' %}data-autoopen="true"{% endif %} aria-labelledby="dialog-create-title">
+  <div class="dialog__content card card--clay">
+    <header class="dialog__header">
+      <h2 id="dialog-create-title" class="dialog__title text-headline-3 font-bold leading-tight">Tambah Tugas Baru</h2>
+      {{ ui.button("Tutup", variant="secondary", size="sm", attrs={"type": "button", "data-close-dialog": "true", "class": "dialog__close-btn", "aria-label": "Tutup dialog"}) }}
+    </header>
+
+    <form method="POST" action="/tasks" class="task-form" novalidate>
+      <input type="hidden" name="next" value="/?view={{ view }}">
+      {{ ui.field("title", "Judul tugas", type="text", value=form.get('title', '') if form else '', error=errors.get('title') if errors else None, required=true) }}
+      {{ ui.field("description", "Deskripsi", type="textarea", value=form.get('description', '') if form else '', error=errors.get('description') if errors else None, rows=3) }}
+      {{ ui.field("due_date", "Tenggat waktu", type="date", value=form.get('due_date', '') if form else '', error=errors.get('due_date') if errors else None) }}
+      {{ ui.field("priority", "Prioritas", type="select", value=form.get('priority', 'medium') if form else 'medium', error=errors.get('priority') if errors else None, options=[('low', 'Rendah'), ('medium', 'Sedang'), ('high', 'Tinggi')]) }}
+      {{ ui.field("status", "Status awal", type="select", value=form.get('status', 'todo') if form else 'todo', error=errors.get('status') if errors else None, options=stages if stages is defined else [('todo', 'Belum Mulai'), ('in_progress', 'Dikerjakan'), ('ready', 'Siap Dicek'), ('review', 'Review'), ('done', 'Selesai')]) }}
+
+      <div class="dialog__actions">
+        {{ ui.button("Batal", variant="secondary", type="button", attrs={"data-close-dialog": "true"}) }}
+        {{ ui.button("Tambah tugas", variant="primary", type="submit") }}
+      </div>
+    </form>
+  </div>
+</dialog>
