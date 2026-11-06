@@ -1,0 +1,1066 @@
+{
+  "info": {
+    "_postman_id": "c8a32997-71b3-4f9e-9d8a-6b4d3f2a8901",
+    "name": "Daftar Tugas Harian API",
+    "description": "Koleksi pengujian Postman v2.1 untuk REST API Daftar Tugas Harian v2 (Kanban 5 Tahapan, Riwayat Transisi, dan Kalender).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5001",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /api/tasks (Semua Tugas)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"data\", \"count\"], \"properties\": {\"data\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"required\": [\"id\", \"title\", \"description\", \"due_date\", \"priority\", \"status\", \"status_label\", \"is_overdue\", \"created_at\", \"updated_at\"], \"properties\": {\"id\": {\"type\": \"integer\"}, \"title\": {\"type\": \"string\"}, \"description\": {\"type\": [\"string\", \"null\"]}, \"due_date\": {\"type\": [\"string\", \"null\"]}, \"priority\": {\"type\": \"string\", \"enum\": [\"low\", \"medium\", \"high\"]}, \"status\": {\"type\": \"string\", \"enum\": [\"todo\", \"in_progress\", \"ready\", \"review\", \"done\"]}, \"status_label\": {\"type\": \"string\", \"enum\": [\"Belum Mulai\", \"Dikerjakan\", \"Siap Dicek\", \"Review\", \"Selesai\"]}, \"is_overdue\": {\"type\": \"boolean\"}, \"created_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}, \"updated_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}}}}, \"count\": {\"type\": \"integer\"}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.count).to.be.at.least(0);",
+              "    pm.expect(jsonData.data).to.be.an(\"array\");",
+              "    if (jsonData.data.length > 0) {",
+              "        const firstTask = jsonData.data[0];",
+              "        pm.expect(firstTask.created_at).to.match(/Z$/);",
+              "        pm.expect(firstTask.updated_at).to.match(/Z$/);",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks"
+          ]
+        },
+        "description": "Mengambil semua daftar tugas harian v2."
+      }
+    },
+    {
+      "name": "GET /api/tasks?status=in_progress&priority=high (Filter Valid)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"data\", \"count\"], \"properties\": {\"data\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"required\": [\"id\", \"title\", \"description\", \"due_date\", \"priority\", \"status\", \"status_label\", \"is_overdue\", \"created_at\", \"updated_at\"], \"properties\": {\"id\": {\"type\": \"integer\"}, \"title\": {\"type\": \"string\"}, \"description\": {\"type\": [\"string\", \"null\"]}, \"due_date\": {\"type\": [\"string\", \"null\"]}, \"priority\": {\"type\": \"string\", \"enum\": [\"low\", \"medium\", \"high\"]}, \"status\": {\"type\": \"string\", \"enum\": [\"todo\", \"in_progress\", \"ready\", \"review\", \"done\"]}, \"status_label\": {\"type\": \"string\", \"enum\": [\"Belum Mulai\", \"Dikerjakan\", \"Siap Dicek\", \"Review\", \"Selesai\"]}, \"is_overdue\": {\"type\": \"boolean\"}, \"created_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}, \"updated_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}}}}, \"count\": {\"type\": \"integer\"}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.count).to.be.at.least(0);",
+              "    pm.expect(jsonData.data).to.be.an(\"array\");",
+              "    jsonData.data.forEach(function (task) {",
+              "        pm.expect(task.status).to.eql(\"in_progress\");",
+              "        pm.expect(task.priority).to.eql(\"high\");",
+              "        pm.expect(task.created_at).to.match(/Z$/);",
+              "        pm.expect(task.updated_at).to.match(/Z$/);",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks?status=in_progress&priority=high",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "in_progress"
+            },
+            {
+              "key": "priority",
+              "value": "high"
+            }
+          ]
+        },
+        "description": "Mengambil daftar tugas dengan filter status in_progress dan prioritas high."
+      }
+    },
+    {
+      "name": "GET /api/tasks (Filter Status Tidak Valid - 400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"error\"], \"properties\": {\"error\": {\"type\": \"object\", \"required\": [\"message\", \"fields\"], \"properties\": {\"message\": {\"type\": \"string\"}, \"fields\": {\"type\": \"object\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.message).to.be.a(\"string\");",
+              "    pm.expect(jsonData.error.fields).to.be.an(\"object\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks?status=invalid_status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks"
+          ],
+          "query": [
+            {
+              "key": "status",
+              "value": "invalid_status"
+            }
+          ]
+        },
+        "description": "Menguji respons kesalahan saat query parameter filter status tidak valid."
+      }
+    },
+    {
+      "name": "POST /api/tasks (Buat Tugas Baru - 201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"data\"], \"properties\": {\"data\": {\"type\": \"object\", \"required\": [\"id\", \"title\", \"description\", \"due_date\", \"priority\", \"status\", \"status_label\", \"is_overdue\", \"created_at\", \"updated_at\"], \"properties\": {\"id\": {\"type\": \"integer\"}, \"title\": {\"type\": \"string\"}, \"description\": {\"type\": [\"string\", \"null\"]}, \"due_date\": {\"type\": [\"string\", \"null\"]}, \"priority\": {\"type\": \"string\", \"enum\": [\"low\", \"medium\", \"high\"]}, \"status\": {\"type\": \"string\", \"enum\": [\"todo\", \"in_progress\", \"ready\", \"review\", \"done\"]}, \"status_label\": {\"type\": \"string\", \"enum\": [\"Belum Mulai\", \"Dikerjakan\", \"Siap Dicek\", \"Review\", \"Selesai\"]}, \"is_overdue\": {\"type\": \"boolean\"}, \"created_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}, \"updated_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.be.a(\"number\");",
+              "    pm.expect(jsonData.data.title).to.eql(\"Verifikasi dokumen pembukaan deposito nasabah\");",
+              "    pm.expect(jsonData.data.priority).to.eql(\"high\");",
+              "    pm.expect(jsonData.data.status).to.eql(\"todo\");",
+              "    pm.expect(jsonData.data.status_label).to.eql(\"Belum Mulai\");",
+              "    pm.expect(jsonData.data.is_overdue).to.be.a(\"boolean\");",
+              "    pm.expect(jsonData.data.created_at).to.match(/Z$/);",
+              "    pm.expect(jsonData.data.updated_at).to.match(/Z$/);",
+              "});",
+              "",
+              "const createdBody = pm.response.json();",
+              "if (createdBody.data && createdBody.data.id) {",
+              "    pm.collectionVariables.set(\"taskId\", createdBody.data.id.toString());",
+              "}",
+              "pm.test(\"Header Location tersedia\", function () {",
+              "    pm.response.to.have.header(\"Location\");",
+              "    pm.expect(pm.response.headers.get(\"Location\")).to.include(\"/api/tasks/\" + createdBody.data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Verifikasi dokumen pembukaan deposito nasabah\",\n  \"description\": \"Pemeriksaan kelengkapan identitas dan persetujuan otorisasi supervisor\",\n  \"due_date\": \"2026-11-20\",\n  \"priority\": \"high\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks"
+          ]
+        },
+        "description": "Membuat tugas baru dan menyimpan ID tugas ke variabel koleksi taskId."
+      }
+    },
+    {
+      "name": "POST /api/tasks (Judul Kosong - 400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"error\"], \"properties\": {\"error\": {\"type\": \"object\", \"required\": [\"message\", \"fields\"], \"properties\": {\"message\": {\"type\": \"string\"}, \"fields\": {\"type\": \"object\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.message).to.be.a(\"string\");",
+              "    pm.expect(jsonData.error.fields).to.have.property(\"title\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"\",\n  \"description\": \"Deskripsi tanpa judul tugas\",\n  \"priority\": \"medium\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks"
+          ]
+        },
+        "description": "Menguji validasi penolakan saat membuat tugas dengan judul kosong."
+      }
+    },
+    {
+      "name": "POST /api/tasks (Prioritas Tidak Valid - 400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"error\"], \"properties\": {\"error\": {\"type\": \"object\", \"required\": [\"message\", \"fields\"], \"properties\": {\"message\": {\"type\": \"string\"}, \"fields\": {\"type\": \"object\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.message).to.be.a(\"string\");",
+              "    pm.expect(jsonData.error.fields).to.have.property(\"priority\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Audit kas operasional cabang\",\n  \"priority\": \"urgent\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks"
+          ]
+        },
+        "description": "Menguji validasi penolakan saat membuat tugas dengan nilai prioritas di luar low, medium, high."
+      }
+    },
+    {
+      "name": "GET /api/tasks/{{taskId}} (Ambil Rincian Tugas - 200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"data\"], \"properties\": {\"data\": {\"type\": \"object\", \"required\": [\"id\", \"title\", \"description\", \"due_date\", \"priority\", \"status\", \"status_label\", \"is_overdue\", \"created_at\", \"updated_at\"], \"properties\": {\"id\": {\"type\": \"integer\"}, \"title\": {\"type\": \"string\"}, \"description\": {\"type\": [\"string\", \"null\"]}, \"due_date\": {\"type\": [\"string\", \"null\"]}, \"priority\": {\"type\": \"string\", \"enum\": [\"low\", \"medium\", \"high\"]}, \"status\": {\"type\": \"string\", \"enum\": [\"todo\", \"in_progress\", \"ready\", \"review\", \"done\"]}, \"status_label\": {\"type\": \"string\", \"enum\": [\"Belum Mulai\", \"Dikerjakan\", \"Siap Dicek\", \"Review\", \"Selesai\"]}, \"is_overdue\": {\"type\": \"boolean\"}, \"created_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}, \"updated_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.eql(Number(pm.collectionVariables.get(\"taskId\")));",
+              "    pm.expect(jsonData.data.title).to.be.a(\"string\");",
+              "    pm.expect(jsonData.data.status).to.be.a(\"string\");",
+              "    pm.expect(jsonData.data.status_label).to.be.a(\"string\");",
+              "    pm.expect(jsonData.data.created_at).to.match(/Z$/);",
+              "    pm.expect(jsonData.data.updated_at).to.match(/Z$/);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "{{taskId}}"
+          ]
+        },
+        "description": "Mengambil rincian data tugas berdasarkan ID yang tersimpan di variabel taskId."
+      }
+    },
+    {
+      "name": "POST /api/tasks/{{taskId}}/move (Pindah Tahapan Valid - 200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"data\"], \"properties\": {\"data\": {\"type\": \"object\", \"required\": [\"id\", \"title\", \"description\", \"due_date\", \"priority\", \"status\", \"status_label\", \"is_overdue\", \"created_at\", \"updated_at\"], \"properties\": {\"id\": {\"type\": \"integer\"}, \"title\": {\"type\": \"string\"}, \"description\": {\"type\": [\"string\", \"null\"]}, \"due_date\": {\"type\": [\"string\", \"null\"]}, \"priority\": {\"type\": \"string\", \"enum\": [\"low\", \"medium\", \"high\"]}, \"status\": {\"type\": \"string\", \"enum\": [\"todo\", \"in_progress\", \"ready\", \"review\", \"done\"]}, \"status_label\": {\"type\": \"string\", \"enum\": [\"Belum Mulai\", \"Dikerjakan\", \"Siap Dicek\", \"Review\", \"Selesai\"]}, \"is_overdue\": {\"type\": \"boolean\"}, \"created_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}, \"updated_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.eql(Number(pm.collectionVariables.get(\"taskId\")));",
+              "    pm.expect(jsonData.data.status).to.eql(\"in_progress\");",
+              "    pm.expect(jsonData.data.status_label).to.eql(\"Dikerjakan\");",
+              "    pm.expect(jsonData.data.created_at).to.match(/Z$/);",
+              "    pm.expect(jsonData.data.updated_at).to.match(/Z$/);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"in_progress\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}/move",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "{{taskId}}",
+            "move"
+          ]
+        },
+        "description": "Memindahkan tahapan tugas ke in_progress secara valid."
+      }
+    },
+    {
+      "name": "POST /api/tasks/{{taskId}}/move (Pindah Tahapan Status Tidak Valid - 400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"error\"], \"properties\": {\"error\": {\"type\": \"object\", \"required\": [\"message\", \"fields\"], \"properties\": {\"message\": {\"type\": \"string\"}, \"fields\": {\"type\": \"object\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.message).to.be.a(\"string\");",
+              "    pm.expect(jsonData.error.fields).to.have.property(\"status\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"invalid_stage\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}/move",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "{{taskId}}",
+            "move"
+          ]
+        },
+        "description": "Menguji respons 400 saat memindahkan status dengan nilai di luar 5 tahapan yang valid."
+      }
+    },
+    {
+      "name": "GET /api/tasks/{{taskId}}/history (Riwayat Tahapan Tugas - 200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"data\"], \"properties\": {\"data\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"required\": [\"from_status\", \"to_status\", \"to_label\", \"created_at\"], \"properties\": {\"from_status\": {\"type\": [\"string\", \"null\"], \"enum\": [null, \"todo\", \"in_progress\", \"ready\", \"review\", \"done\"]}, \"to_status\": {\"type\": \"string\", \"enum\": [\"todo\", \"in_progress\", \"ready\", \"review\", \"done\"]}, \"to_label\": {\"type\": \"string\", \"enum\": [\"Belum Mulai\", \"Dikerjakan\", \"Siap Dicek\", \"Review\", \"Selesai\"]}, \"created_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.be.an(\"array\");",
+              "    pm.expect(jsonData.data.length).to.be.at.least(1);",
+              "    pm.expect(jsonData.data[0].from_status).to.be.null;",
+              "    pm.expect(jsonData.data[0].to_status).to.eql(\"todo\");",
+              "    pm.expect(jsonData.data[0].to_label).to.eql(\"Belum Mulai\");",
+              "    for (let i = 0; i < jsonData.data.length - 1; i++) {",
+              "        const t1 = new Date(jsonData.data[i].created_at).getTime();",
+              "        const t2 = new Date(jsonData.data[i + 1].created_at).getTime();",
+              "        pm.expect(t1).to.be.at.most(t2);",
+              "    }",
+              "    jsonData.data.forEach(function (ev) {",
+              "        pm.expect(ev.created_at).to.match(/Z$/);",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}/history",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "{{taskId}}",
+            "history"
+          ]
+        },
+        "description": "Mengambil riwayat transisi tahapan tugas, dipastikan berurutan dari tertua (oldest first) dan timestamp berakhiran Z."
+      }
+    },
+    {
+      "name": "GET /api/tasks/999999 (Tugas Tidak Ditemukan - 404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"error\"], \"properties\": {\"error\": {\"type\": \"object\", \"required\": [\"message\", \"fields\"], \"properties\": {\"message\": {\"type\": \"string\"}, \"fields\": {\"type\": \"object\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.message).to.be.a(\"string\");",
+              "    pm.expect(jsonData.error.fields).to.be.an(\"object\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "999999"
+          ]
+        },
+        "description": "Menguji respons 404 Not Found saat mengakses ID tugas yang tidak terdaftar."
+      }
+    },
+    {
+      "name": "PUT /api/tasks/{{taskId}} (Perbarui Tugas - 200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"data\"], \"properties\": {\"data\": {\"type\": \"object\", \"required\": [\"id\", \"title\", \"description\", \"due_date\", \"priority\", \"status\", \"status_label\", \"is_overdue\", \"created_at\", \"updated_at\"], \"properties\": {\"id\": {\"type\": \"integer\"}, \"title\": {\"type\": \"string\"}, \"description\": {\"type\": [\"string\", \"null\"]}, \"due_date\": {\"type\": [\"string\", \"null\"]}, \"priority\": {\"type\": \"string\", \"enum\": [\"low\", \"medium\", \"high\"]}, \"status\": {\"type\": \"string\", \"enum\": [\"todo\", \"in_progress\", \"ready\", \"review\", \"done\"]}, \"status_label\": {\"type\": \"string\", \"enum\": [\"Belum Mulai\", \"Dikerjakan\", \"Siap Dicek\", \"Review\", \"Selesai\"]}, \"is_overdue\": {\"type\": \"boolean\"}, \"created_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}, \"updated_at\": {\"type\": \"string\", \"pattern\": \".*Z$\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.id).to.eql(Number(pm.collectionVariables.get(\"taskId\")));",
+              "    pm.expect(jsonData.data.status).to.eql(\"ready\");",
+              "    pm.expect(jsonData.data.status_label).to.eql(\"Siap Dicek\");",
+              "    pm.expect(jsonData.data.priority).to.eql(\"medium\");",
+              "    pm.expect(jsonData.data.created_at).to.match(/Z$/);",
+              "    pm.expect(jsonData.data.updated_at).to.match(/Z$/);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"ready\",\n  \"priority\": \"medium\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "{{taskId}}"
+          ]
+        },
+        "description": "Memperbarui status dan prioritas tugas yang tersimpan di variabel taskId."
+      }
+    },
+    {
+      "name": "PUT /api/tasks/{{taskId}} (Prioritas Tidak Valid - 400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"error\"], \"properties\": {\"error\": {\"type\": \"object\", \"required\": [\"message\", \"fields\"], \"properties\": {\"message\": {\"type\": \"string\"}, \"fields\": {\"type\": \"object\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.message).to.be.a(\"string\");",
+              "    pm.expect(jsonData.error.fields).to.have.property(\"priority\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"priority\": \"extreme\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "{{taskId}}"
+          ]
+        },
+        "description": "Menguji penolakan pembaruan saat nilai prioritas tidak valid."
+      }
+    },
+    {
+      "name": "PUT /api/tasks/999999 (Tugas Tidak Ditemukan - 404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"error\"], \"properties\": {\"error\": {\"type\": \"object\", \"required\": [\"message\", \"fields\"], \"properties\": {\"message\": {\"type\": \"string\"}, \"fields\": {\"type\": \"object\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.message).to.be.a(\"string\");",
+              "    pm.expect(jsonData.error.fields).to.be.an(\"object\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"done\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "999999"
+          ]
+        },
+        "description": "Menguji pembaruan data pada ID tugas yang tidak terdaftar."
+      }
+    },
+    {
+      "name": "DELETE /api/tasks/999999 (Tugas Tidak Ditemukan - 404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"error\"], \"properties\": {\"error\": {\"type\": \"object\", \"required\": [\"message\", \"fields\"], \"properties\": {\"message\": {\"type\": \"string\"}, \"fields\": {\"type\": \"object\"}}}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.message).to.be.a(\"string\");",
+              "    pm.expect(jsonData.error.fields).to.be.an(\"object\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "999999"
+          ]
+        },
+        "description": "Menguji penghapusan tugas dengan ID yang tidak terdaftar."
+      }
+    },
+    {
+      "name": "DELETE /api/tasks/{{taskId}} (Hapus Tugas - 200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Content-Type header is application/json\", function () {",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "pm.test(\"Response matches JSON schema\", function () {",
+              "    const schema = {\"type\": \"object\", \"required\": [\"message\"], \"properties\": {\"message\": {\"type\": \"string\"}}};",
+              "    pm.response.to.have.jsonSchema(schema);",
+              "});",
+              "",
+              "pm.test(\"Validate field values\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.message).to.eql(\"Tugas dihapus\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "tasks",
+            "{{taskId}}"
+          ]
+        },
+        "description": "Menghapus tugas yang tersimpan di variabel taskId."
+      }
+    }
+  ]
+}
