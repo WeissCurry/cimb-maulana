@@ -1,0 +1,40 @@
+Playwright click-through and responsive check, Chromium headless (2026-11-06 19:00 WIB)
+sx = horizontal page scroll after wheel (must be 0); small = interactive elements under 44x44px; left = left edge of header/main/app shell
+tab list -> visible True, url /?view=list
+tab calendar -> visible True, url /?view=calendar
+tab gantt -> visible True, url /?view=gantt
+tab board -> visible True, url /?view=board
+create dialog modal=True overflow=hidden/hidden auto page scrolled while open: False
+select chevron: 44px bgpos=calc(100% - 14px) 50% appearance=none
+empty submit -> url /tasks create dialog open: True modal: True
+create -> new task exists: True
+task dialog open modal: True
+escape closes: True focus back: 40
+?task= deep link opens modal: True
+/tasks/id redirect -> /?task=40
+Lanjut clicked
+280 board {"sx": 0, "small": [], "left": [16, 16, 16]}
+280 list {"sx": 0, "small": [], "left": [16, 16, 16]}
+280 calendar {"sx": 0, "small": [], "left": [16, 16, 16]}
+280 gantt {"sx": 0, "small": [], "left": [16, 16, 16]}
+390 board {"sx": 0, "small": [], "left": [16, 16, 16]}
+390 list {"sx": 0, "small": [], "left": [16, 16, 16]}
+390 calendar {"sx": 0, "small": [], "left": [16, 16, 16]}
+390 gantt {"sx": 0, "small": [], "left": [16, 16, 16]}
+673 board {"sx": 0, "small": [], "left": [24, 24, 24]}
+673 list {"sx": 0, "small": [], "left": [24, 24, 24]}
+673 calendar {"sx": 0, "small": [], "left": [24, 24, 24]}
+673 gantt {"sx": 0, "small": [], "left": [24, 24, 24]}
+884 board {"sx": 0, "small": [], "left": [24, 24, 24]}
+884 list {"sx": 0, "small": [], "left": [24, 24, 24]}
+884 calendar {"sx": 0, "small": [], "left": [24, 24, 24]}
+884 gantt {"sx": 0, "small": [], "left": [24, 24, 24]}
+1024 board {"sx": 0, "small": [], "left": [24, 24, 24]}
+1024 list {"sx": 0, "small": [], "left": [24, 24, 24]}
+1024 calendar {"sx": 0, "small": [], "left": [24, 24, 24]}
+1024 gantt {"sx": 0, "small": [], "left": [24, 24, 24]}
+1440 board {"sx": 0, "small": [], "left": [104, 104, 104]}
+1440 list {"sx": 0, "small": [], "left": [104, 104, 104]}
+1440 calendar {"sx": 0, "small": [], "left": [104, 104, 104]}
+1440 gantt {"sx": 0, "small": [], "left": [104, 104, 104]}
+js errors: []

@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Laporan Studi Kasus: BCM Developer Intern - Aplikasi Web Daftar Tugas Harian</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font: 10pt/1.55 -apple-system, "Segoe UI", Inter, Helvetica, Arial, sans-serif; color: #212121; }
+  p, li { text-align: justify; hyphens: auto; }
+  h1 { font-size: 20pt; margin: 0 0 4pt; color: #212121; }
+  .subtitle { font-size: 11pt; color: #475569; margin: 0 0 12pt; }
+  h2 { font-size: 13pt; margin: 20pt 0 8pt; padding-bottom: 4pt; border-bottom: 2px solid #EC2428; color: #212121; break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12pt 0 6pt; color: #212121; break-after: avoid; }
+  table { border-collapse: collapse; width: 100%; margin: 8pt 0; font-size: 8.5pt; break-inside: auto; }
+  th, td { border: 1px solid #d9e2ec; padding: 4pt 6pt; vertical-align: top; text-align: left; }
+  th { background: #f8fafc; font-weight: 600; }
+  tr { break-inside: avoid; }
+  code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; font-size: 8.5pt; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  pre { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8pt; border-radius: 4px; font-size: 8pt; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  hr { border: 0; border-top: 1px solid #e2e8f0; margin: 14pt 0; }
+  .fig { margin: 12pt 0 16pt; break-inside: avoid; }
+  .fig .grid { display: grid; gap: 8pt; }
+  .fig .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .fig .sub img { width: 100%; display: block; border: 1px solid #e2e8f0; border-radius: 4px; }
+  .sublabel { font-size: 7.5pt; color: #64748b; margin-top: 3pt; text-align: center; }
+  figcaption { font: 8pt/1.4 "Times New Roman", Times, serif; color: #334155; margin-top: 5pt; text-align: center; }
+  a { color: #d61e22; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1>Laporan Studi Kasus: BCM Developer Intern</h1>
+<div class="subtitle">Aplikasi Web Daftar Tugas Harian</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;"></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Kandidat</strong></td>
+      <td>Maulana Asykari</td>
+    </tr>
+    <tr>
+      <td><strong>Posisi</strong></td>
+      <td>BCM Developer Intern, MagangHub CIMB Niaga</td>
+    </tr>
+    <tr>
+      <td><strong>Repository</strong></td>
+      <td><a href="https://github.com/WeissCurry/cimb-maulana">https://github.com/WeissCurry/cimb-maulana</a></td>
+    </tr>
+    <tr>
+      <td><strong>Tanggal</strong></td>
+      <td>6 November 2026</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>0. Ringkasan</h2>
+
+<p>Studi kasus ini mencakup dua soal:</p>
+<ol>
+  <li>Membangun aplikasi web pencatatan daftar tugas harian dengan Python dan MySQL, lengkap dengan dokumentasi instalasi, tabel rute, skema data, dan cara menjalankan test.</li>
+  <li>Menjelaskan komponen utama yang divalidasi pada respons API menggunakan Postman beserta contoh kodenya.</li>
+</ol>
+
+<p>Saya membangun aplikasi web berbasis Flask 3 dan MySQL 8.4 yang menyatukan empat tampilan (Papan Kanban 5 tahap, Daftar baris, Kalender tenggat bulanan, dan Bagan Gantt) dalam satu halaman dengan parameter <code>?view=</code>. Formulir input menggunakan dialog modal native <code>&lt;dialog&gt;</code>. Tampilan dibangun dengan Tailwind CSS v4 tanpa Node.js, ditambah animasi GSAP 3 dengan pelindung aksesibilitas <code>prefers-reduced-motion</code>.</p>
+
+<p>Data hasil pengujian dari berkas bukti:</p>
+<ul>
+  <li>95 test pytest lulus dalam 0.61 detik, mencakup model, validasi payload, logika filter, pengurutan, batas keterlambatan, dan penanganan error.</li>
+  <li>81 asersi Newman Postman lulus tanpa kegagalan (0 failed) pada 16 request API dengan rata-rata waktu respons 2ms dan durasi total 233ms.</li>
+  <li>84 kasus uji ekstrem (injeksi, batas data, konkurensi 100 request paralel) lulus semua, setelah 2 bug yang ditemukannya diperbaiki.</li>
+  <li>24 kombinasi ukuran layar dan tampilan teruji bebas pergeseran samping (<code>sx: 0</code>) dari lebar 280px hingga 1440px tanpa error JavaScript.</li>
+  <li>Tampilan Kalender desktop pas pada satu layar (<code>scrollHeight == innerHeight</code> pada resolusi 1440x900, 1280x720, 1920x1080, 1024x768, dan 884x1104).</li>
+</ul>
+
+<hr>
+
+<h2>1. Setup dan Asumsi</h2>
+
+<p>Saya menggunakan Python 3.12, Flask 3.1, dan MySQL 8.4 lokal di macOS. Server berjalan pada port 5001 dengan perintah <code>flask --app app run --debug --port 5001</code>. Port 5000 dihindari karena dipakai oleh AirPlay Receiver. Untuk pengujian otomatis pada <code>test_app.py</code>, saya memakai database SQLite in-memory (<code>sqlite:///:memory:</code>) agar cepat dan terisolasi.</p>
+
+<p>Tabel asumsi teknis:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 8%;">#</th>
+      <th style="width: 32%;">Asumsi</th>
+      <th>Alasan dan Implikasi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A1</td>
+      <td>Tanpa autentikasi (no auth).</td>
+      <td>Batasan penugasan; data dapat diakses langsung untuk evaluasi lokal.</td>
+    </tr>
+    <tr>
+      <td>A2</td>
+      <td>Tanpa proteksi CSRF (no CSRF).</td>
+      <td>Instruksi penugasan untuk menyederhanakan pengujian form dan request API.</td>
+    </tr>
+    <tr>
+      <td>A3</td>
+      <td>Zona waktu Asia/Jakarta (WIB).</td>
+      <td>Operasional CIMB Niaga berpusat di Indonesia; evaluasi tanggal hari ini mengacu pada WIB.</td>
+    </tr>
+    <tr>
+      <td>A4</td>
+      <td>Status tugas memakai 5 tahap.</td>
+      <td>Menggantikan sistem biner todo/done agar mencerminkan alur kerja operasional bank.</td>
+    </tr>
+    <tr>
+      <td>A5</td>
+      <td>MySQL 8.4 untuk server dan SQLite untuk test.</td>
+      <td>Memastikan relasi data riil di lokal sekaligus mempercepat eksekusi pytest.</td>
+    </tr>
+    <tr>
+      <td>A6</td>
+      <td>Styling mandiri dengan Tailwind CSS v4.</td>
+      <td>Menggunakan binary di <code>bin/tailwindcss</code>; file <code>static/tailwind.css</code> sudah prebuilt.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>2. Pemahaman Kebutuhan</h2>
+
+<p>Dalam divisi Business Continuity Management (BCM) dan operasional bank, pencatatan tugas harian berfungsi sebagai pengendali alur kerja dan mitigasi risiko operasional. Tugas seperti pengecekan kelengkapan berkas KYC, rekonsiliasi transaksi, pembaruan dokumen SOP kontinjensi, atau pengujian disaster recovery memerlukan pembagian tahap pengerjaan yang jelas, batas waktu tegas, dan jejak audit yang akuntabel.</p>
+
+<p>Saya merancang empat tampilan untuk memenuhi kebutuhan tersebut:</p>
+<ol>
+  <li><strong>Papan Kanban 5 Tahap:</strong> Memberikan kejelasan posisi pengerjaan tugas (Belum Mulai, Dikerjakan, Siap Dicek, Review, Selesai). Pemisahan tahap Siap Dicek dan Review membedakan tugas yang selesai dikerjakan staf dengan tugas yang sedang diperiksa supervisor.</li>
+  <li><strong>Riwayat Tahapan (<code>task_events</code>):</strong> Menyimpan jejak audit perpindahan status, mencatat durasi kerja pada tiap tahap, dan menghitung total waktu penyelesaian tugas.</li>
+  <li><strong>Kalender Bulanan:</strong> Memetakan tanggal jatuh tempo tugas operasional perbankan agar beban kerja bulanan terpantau jelas.</li>
+  <li><strong>Bagan Gantt:</strong> Menampilkan rentang hari pengerjaan dari tanggal buat hingga tenggat waktu untuk mendeteksi potensi tugas terlambat sejak dini.</li>
+</ol>
+
+<hr>
+
+<h2>3. Desain Solusi dan Trade-off</h2>
+
+<p>Saya memilih stack Python 3.12, Flask 3, Flask-SQLAlchemy, PyMySQL, dan MySQL 8.4. Untuk manipulasi waktu dan kalender, saya memakai modul bawaan Python <code>zoneinfo</code> dan <code>calendar</code> tanpa dependensi luar.</p>
+
+<p>Model data menggunakan dua tabel relasional:</p>
+<ul>
+  <li>Tabel <code>tasks</code>: Menyimpan data tugas (<code>id</code>, <code>title</code>, <code>description</code>, <code>due_date</code>, <code>priority</code>, <code>status</code>, <code>created_at</code>, <code>updated_at</code>).</li>
+  <li>Tabel <code>task_events</code>: Mencatat riwayat status (<code>id</code>, <code>task_id</code>, <code>from_status</code>, <code>to_status</code>, <code>created_at</code>) dengan foreign key berkaskade (<code>ON DELETE CASCADE</code>) dan indeks <code>(task_id, created_at)</code>.</li>
+</ul>
+
+<p>Aturan status: Pembuatan tugas mencatat satu event awal (<code>from_status: null</code>). Setiap perubahan status mencatat satu event baru. Pemindahan ke status yang sama tidak dicatat. Format waktu JSON selalu UTC ISO 8601 berakhiran <code>Z</code> (contoh <code>2026-11-06T10:00:00Z</code>).</p>
+
+<p>Keputusan antarmuka:</p>
+<ul>
+  <li>Server-Rendered Jinja: Seluruh HTML dirender di server dengan fallback <code>/?view=&lt;name&gt;</code>. JavaScript menambahkan navigasi tab tanpa reload (<code>history.replaceState</code>), kontrol dialog, dan drag and drop.</li>
+  <li>Tailwind CSS v4 Standalone: Kompilasi berjalan via binary <code>bin/tailwindcss</code> tanpa Node.js. File <code>static/tailwind.css</code> sudah prebuilt di repositori.</li>
+  <li>Aksesibilitas Warna CIMB: Warna merah <code>#EC2428</code> memiliki rasio kontras 4.33:1 terhadap teks putih, di bawah standar WCAG AA (minimal 4.5:1). Saya menyesuaikan tombol primer menjadi <code>#D61E22</code> (kontras 5.16:1) agar lolos uji WCAG AA.</li>
+  <li>Komponen Terpusat: Seluruh tombol dibuat lewat makro Jinja di <code>templates/components/ui.html</code>.</li>
+  <li>Animasi GSAP 3: Transisi tombol dan dialog memakai GSAP 3 via CDN, dengan pelindung <code>prefers-reduced-motion: reduce</code>.</li>
+</ul>
+
+<p>Tabel perbandingan keputusan:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 18%;">Aspek</th>
+      <th style="width: 25%;">Pilihan Terpilih</th>
+      <th style="width: 25%;">Alternatif yang Ditolak</th>
+      <th>Alasan</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Halaman</td>
+      <td>Satu halaman (<code>app.html</code>) dengan sub-view</td>
+      <td>Halaman terpisah per rute</td>
+      <td>Menghilangkan reload penuh antar tampilan sehingga alur terpantau dalam satu konteks.</td>
+    </tr>
+    <tr>
+      <td>Styling</td>
+      <td>Binary standalone Tailwind v4</td>
+      <td>Node.js + npm pipeline</td>
+      <td>Menghindari instalasi node_modules; proyek dapat dijalankan murni dengan Python.</td>
+    </tr>
+    <tr>
+      <td>Dialog Form</td>
+      <td>Native HTML5 <code>&lt;dialog&gt;</code></td>
+      <td>Modal kustom div overlay</td>
+      <td>Memakai aksesibilitas bawaan browser (focus trap, tombol Escape, backdrop native).</td>
+    </tr>
+    <tr>
+      <td>Waktu</td>
+      <td>UTC DATETIME di database, format ISO 8601 Z di JSON</td>
+      <td>Waktu lokal tanpa zona waktu</td>
+      <td>Menghindari perbedaan waktu lokal antar klien dan mematuhi standar ISO.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h2>4. Implementasi</h2>
+
+<p>Aplikasi berjalan pada file <code>app.html</code> yang menampung header, tab navigasi, filter prioritas, tombol tambah tugas, dan modal dialog:</p>
+<ul>
+  <li>Tampilan Papan (<code>views/board.html</code>): 5 kolom alur kerja dengan kartu tugas, chip prioritas, due date, tombol geser status, dan drag and drop.</li>
+  <li>Tampilan Daftar (<code>views/list.html</code>): Format baris data pada desktop (&gt;= 600px) dan kartu bertumpuk pada ponsel (&lt; 600px).</li>
+  <li>Tampilan Kalender (<code>views/calendar.html</code>): Kisi bulanan 7 kolom Senin-Minggu pada desktop dengan batas 3 tugas per tanggal, serta daftar agenda pada ponsel (&lt; 600px).</li>
+  <li>Bagan Gantt (<code>views/gantt.html</code>): Baris visual rentang hari pengerjaan dengan batas maksimal 45 hari.</li>
+</ul>
+
+<p>Antarmuka menyediakan <em>loading skeletons</em> saat pergantian tampilan untuk menjaga stabilitas visual sebelum konten selesai dimuat. Untuk mengisi data awal, perintah CLI <code>flask --app app seed --reset</code> memuat 14 contoh tugas operasional perbankan lengkap dengan riwayat tahapan.</p>
+
+<p>Tabel rute HTML:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 10%;">Method</th>
+      <th style="width: 22%;">Path</th>
+      <th>Deskripsi</th>
+      <th style="width: 15%;">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GET</td>
+      <td><code>/</code></td>
+      <td>Halaman utama. Query: <code>view</code>, <code>priority</code>, <code>month</code>, <code>task</code>.</td>
+      <td>200</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td><code>/tasks</code></td>
+      <td>Tambah tugas dari modal. Valid: redirect. Invalid: 400.</td>
+      <td>302 / 400</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td><code>/tasks/&lt;id&gt;</code></td>
+      <td>Detail tugas. Redirect 302 ke <code>/?task=&lt;id&gt;</code>.</td>
+      <td>302</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td><code>/tasks/&lt;id&gt;/edit</code></td>
+      <td>Form ubah. Redirect 302 ke <code>/?task=&lt;id&gt;</code>.</td>
+      <td>302</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td><code>/tasks/&lt;id&gt;/edit</code></td>
+      <td>Simpan ubah tugas dan status.</td>
+      <td>302 / 400</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td><code>/tasks/&lt;id&gt;/move</code></td>
+      <td>Pindah status tahapan.</td>
+      <td>302</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td><code>/tasks/&lt;id&gt;/delete</code></td>
+      <td>Hapus tugas dan riwayat transisi.</td>
+      <td>302</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td><code>/calendar</code></td>
+      <td>Redirect 302 ke <code>/?view=calendar</code>.</td>
+      <td>302</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Tabel endpoint REST API (<code>/api/tasks</code>):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 10%;">Method</th>
+      <th style="width: 25%;">Path</th>
+      <th>Deskripsi</th>
+      <th style="width: 28%;">Sukses</th>
+      <th style="width: 14%;">Error</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GET</td>
+      <td><code>/api/tasks</code></td>
+      <td>Daftar tugas dengan filter opsional <code>status</code> dan <code>priority</code>.</td>
+      <td>200 <code>{"data":[...], "count":n}</code></td>
+      <td>400</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td><code>/api/tasks</code></td>
+      <td>Buat tugas baru. Mengembalikan header <code>Location</code>.</td>
+      <td>201 <code>{"data":task}</code></td>
+      <td>400</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td><code>/api/tasks/&lt;id&gt;</code></td>
+      <td>Data satu tugas berdasarkan ID.</td>
+      <td>200 <code>{"data":task}</code></td>
+      <td>404</td>
+    </tr>
+    <tr>
+      <td>PUT</td>
+      <td><code>/api/tasks/&lt;id&gt;</code></td>
+      <td>Update atribut tugas parsial atau penuh.</td>
+      <td>200 <code>{"data":task}</code></td>
+      <td>400 / 404</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td><code>/api/tasks/&lt;id&gt;/move</code></td>
+      <td>Pindahkan tahapan tugas dengan payload <code>{"status": key}</code>.</td>
+      <td>200 <code>{"data":task}</code></td>
+      <td>400 / 404</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td><code>/api/tasks/&lt;id&gt;/history</code></td>
+      <td>Riwayat transisi status tugas terurut dari paling awal.</td>
+      <td>200 <code>{"data":[...]}</code></td>
+      <td>404</td>
+    </tr>
+    <tr>
+      <td>DELETE</td>
+      <td><code>/api/tasks/&lt;id&gt;</code></td>
+      <td>Hapus data tugas beserta riwayat transisinya.</td>
+      <td>200 <code>{"message":"Tugas dihapus"}</code></td>
+      <td>404</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Perilaku responsif:</p>
+<ul>
+  <li>Desktop (&gt;= 1280px): 5 kolom Kanban sejajar, kalender fit satu layar tanpa scroll window utama, dan Gantt dengan sticky header.</li>
+  <li>Layar lipat terbuka (673px dan 884px) serta tablet (1024px): Papan Kanban digeser horizontal via <code>scroll-snap-type: x mandatory</code> pada lebar kolom ~300px tanpa menggeser halaman utama.</li>
+  <li>Layar ponsel (280px dan 390px): Satu kolom Kanban tampil per layar (~88% lebar) dengan tombol anchor tahapan di atas. Kalender beralih ke agenda. Modal dialog menjadi bottom sheet setinggi <code>100dvh</code>.</li>
+</ul>
+
+<hr>
+
+<h2>5. Bukti Pengujian</h2>
+
+<h3>5.1 Bukti Pytest (95 Passed)</h3>
+<p>Berkas bukti: <a href="evidence/pytest.txt">evidence/pytest.txt</a></p>
+
+<pre><code>$ .venv/bin/python -m pytest -v  (2026-11-06 19:28 WIB)
+collected 95 items
+...
+============================== 95 passed in 0.61s ==============================</code></pre>
+
+<p>Seluruh pengujian unit dan rute backend lulus tanpa kesalahan.</p>
+
+<h3>5.2 Bukti Newman Postman (81 Assertions, 0 Failed)</h3>
+<p>Berkas bukti: <a href="evidence/postman-newman.txt">evidence/postman-newman.txt</a></p>
+
+<pre><code>$ newman run postman_collection.json  (2026-11-06 19:02 WIB)
+iterations: 1, requests: 16, test-scripts: 16, assertions: 81 (executed: 81, failed: 0)
+total run duration: 233ms, average response time: 2ms [min: 1ms, max: 14ms]</code></pre>
+
+<p>Sebanyak 16 request API berhasil divalidasi dengan 81 asersi tanpa kegagalan.</p>
+
+<h3>5.3 Bukti Interaksi UI dan Viewport Playwright (Zero Sideways Scroll)</h3>
+<p>Berkas bukti: <a href="evidence/ui-click-through.txt">evidence/ui-click-through.txt</a></p>
+
+<pre><code>Playwright click-through check, Chromium headless (2026-11-06 19:00 WIB)
+tab list, calendar, gantt, board -&gt; all visible True
+create dialog modal=True, page scrolled: False, escape closes: True
+viewports 280, 390, 673, 884, 1024, 1440 across 4 views -&gt; all sx: 0, small: []
+js errors: []</code></pre>
+
+<p>Pengujian memastikan tab berpindah mulus, dialog modal mengunci scroll halaman, 24 kombinasi viewport bebas scroll horizontal (<code>sx: 0</code>), dan ukuran tombol memenuhi minimal 44x44px.</p>
+
+<h3>5.4 Bukti Fit Kalender Desktop (ScrollHeight == InnerHeight)</h3>
+<p>Berkas bukti: <a href="evidence/calendar-fit.txt">evidence/calendar-fit.txt</a></p>
+
+<pre><code>Calendar view fit check: scrollHeight (sh) must equal innerHeight (ih) on desktop
+1440 900 {'sh': 900, 'ih': 900, 'sx': False}
+1280 720 {'sh': 720, 'ih': 720, 'sx': False}
+1920 1080 {'sh': 1080, 'ih': 1080, 'sx': False}
+1024 768 {'sh': 768, 'ih': 768, 'sx': False}
+884 1104 {'sh': 1104, 'ih': 1104, 'sx': False}
+errors []</code></pre>
+
+<p>Pada resolusi desktop dan tablet, tinggi total halaman sama dengan tinggi layar peramban (<code>sh == ih</code>), sehingga kalender pas satu layar tanpa scrollbar jendela.</p>
+
+<h3>5.x Pengujian Ekstrem</h3>
+<p>Saya menjalankan pengujian kasus batas dan beban ekstrem pada backend dan antarmuka pengguna:</p>
+<ul>
+  <li>Pengujian ekstrem API dan keamanan backend (<a href="evidence/extreme-tests.txt">evidence/extreme-tests.txt</a>): Sebanyak 84 skenario dijalankan dengan hasil 84 lulus dan 0 gagal (84 pass, 0 fail). Pengujian mencakup payload XSS dan SQL injection, batas panjang dan karakter Unicode (200 karakter CJK, emoji, teks RTL), tanggal tidak valid termasuk 2026-02-29 serta tahun 0001 dan 9999, body request rusak dan body 1 MB, ID bernilai sangat besar, HTTP method yang salah, percobaan open-redirect, konkurensi 100 create dan 100 move paralel, serta performa 400+ tugas di mana setiap tampilan merespons di bawah 1.5 detik. Dua bug berhasil ditemukan dan diperbaiki: bulan kalender 9999-12 dan 0001-01 yang memicu error 500 karena overflow tanggal, serta karakter garis miring terbalik (backslash) pada parameter redirect yang sempat diterima.</li>
+  <li>Pengujian ekstrem antarmuka pengguna (<a href="evidence/ui-extreme.txt">evidence/ui-extreme.txt</a>): Judul tugas berisi payload XSS dipastikan tidak pernah tereksekusi (0 alert, 0 JavaScript error) pada 4 tampilan dan 4 ukuran layar (280px, 390px, 884px, 1440px). Judul panjang 200 karakter tanpa spasi yang awalnya meluap pada tabel daftar dan panel kalender telah diperbaiki sehingga menghasilkan 0 elemen meluap (0 escaping elements).</li>
+</ul>
+
+<hr>
+
+<h2>6. Bukti Visual</h2>
+
+<p>Tangkapan layar hasil uji Playwright Chromium headless di direktori <code>assessment/screenshots</code>:</p>
+
+<h3>6.1 Tampilan Papan Kanban (Board View)</h3>
+<figure class="fig">
+  <div class="sub" style="margin-bottom: 8pt;">
+    <img src="screenshots/board-desktop.png" alt="Papan Kanban Desktop">
+    <div class="sublabel">Desktop (1440px)</div>
+  </div>
+  <div class="grid grid-3">
+    <div class="sub">
+      <img src="screenshots/board-fold-open.png" alt="Papan Kanban Fold Open">
+      <div class="sublabel">Fold Terbuka (884px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/board-fold-cover.png" alt="Papan Kanban Fold Cover">
+      <div class="sublabel">Fold Tertutup (344px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/board-mobile.png" alt="Papan Kanban Mobile">
+      <div class="sublabel">Ponsel (390px)</div>
+    </div>
+  </div>
+  <figcaption>Gambar 1. Papan Kanban pada desktop, perangkat lipat terbuka, cover screen, dan ponsel.</figcaption>
+</figure>
+
+<h3>6.2 Tampilan Kalender Bulanan (Calendar View)</h3>
+<figure class="fig">
+  <div class="sub" style="margin-bottom: 8pt;">
+    <img src="screenshots/calendar-desktop.png" alt="Kalender Bulanan Desktop">
+    <div class="sublabel">Desktop (1440px)</div>
+  </div>
+  <div class="grid grid-3">
+    <div class="sub">
+      <img src="screenshots/calendar-fold-open.png" alt="Kalender Bulanan Fold Open">
+      <div class="sublabel">Fold Terbuka (884px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/calendar-fold-cover.png" alt="Kalender Bulanan Fold Cover">
+      <div class="sublabel">Fold Tertutup (344px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/calendar-mobile.png" alt="Kalender Bulanan Mobile">
+      <div class="sublabel">Ponsel (390px)</div>
+    </div>
+  </div>
+  <figcaption>Gambar 2. Kalender bulanan dan adaptasi daftar agenda seluler.</figcaption>
+</figure>
+
+<h3>6.3 Tampilan Bagan Gantt (Gantt View)</h3>
+<figure class="fig">
+  <div class="sub" style="margin-bottom: 8pt;">
+    <img src="screenshots/gantt-desktop.png" alt="Bagan Gantt Desktop">
+    <div class="sublabel">Desktop (1440px)</div>
+  </div>
+  <div class="grid grid-3">
+    <div class="sub">
+      <img src="screenshots/gantt-fold-open.png" alt="Bagan Gantt Fold Open">
+      <div class="sublabel">Fold Terbuka (884px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/gantt-fold-cover.png" alt="Bagan Gantt Fold Cover">
+      <div class="sublabel">Fold Tertutup (344px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/gantt-mobile.png" alt="Bagan Gantt Mobile">
+      <div class="sublabel">Ponsel (390px)</div>
+    </div>
+  </div>
+  <figcaption>Gambar 3. Bagan Gantt rentang pengerjaan tugas lintas perangkat.</figcaption>
+</figure>
+
+<h3>6.4 Tampilan Tabel Daftar (List View)</h3>
+<figure class="fig">
+  <div class="sub" style="margin-bottom: 8pt;">
+    <img src="screenshots/list-desktop.png" alt="Tabel Daftar Desktop">
+    <div class="sublabel">Desktop (1440px)</div>
+  </div>
+  <div class="grid grid-3">
+    <div class="sub">
+      <img src="screenshots/list-fold-open.png" alt="Tabel Daftar Fold Open">
+      <div class="sublabel">Fold Terbuka (884px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/list-fold-cover.png" alt="Tabel Daftar Fold Cover">
+      <div class="sublabel">Fold Tertutup (344px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/list-mobile.png" alt="Tabel Daftar Mobile">
+      <div class="sublabel">Ponsel (390px)</div>
+    </div>
+  </div>
+  <figcaption>Gambar 4. Tabel Daftar tugas lintas resolusi.</figcaption>
+</figure>
+
+<h3>6.5 Modal Dialog Rincian Tugas dan Linimasa</h3>
+<figure class="fig">
+  <div class="sub" style="margin-bottom: 8pt;">
+    <img src="screenshots/dialog-task-desktop.png" alt="Dialog Rincian Tugas Desktop">
+    <div class="sublabel">Desktop (1440px)</div>
+  </div>
+  <div class="grid grid-3">
+    <div class="sub">
+      <img src="screenshots/dialog-task-fold-open.png" alt="Dialog Rincian Tugas Fold Open">
+      <div class="sublabel">Fold Terbuka (884px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/dialog-task-fold-cover.png" alt="Dialog Rincian Tugas Fold Cover">
+      <div class="sublabel">Fold Tertutup (344px)</div>
+    </div>
+    <div class="sub">
+      <img src="screenshots/dialog-task-mobile.png" alt="Dialog Rincian Tugas Mobile">
+      <div class="sublabel">Ponsel (390px)</div>
+    </div>
+  </div>
+  <figcaption>Gambar 5. Modal dialog rincian tugas dan linimasa durasi status.</figcaption>
+</figure>
+
+<hr>
+
+<h2>7. Jawaban Soal QA (Postman API Testing)</h2>
+
+<p>Saya memvalidasi sembilan komponen utama pada setiap respons API:</p>
+<ol>
+  <li><strong>Status Code:</strong> Memeriksa kode status HTTP (200, 201, 400, 404).</li>
+  <li><strong>Response Time:</strong> Memastikan waktu pemrosesan di bawah 500ms.</li>
+  <li><strong>Response Headers:</strong> Memverifikasi <code>Content-Type: application/json</code> dan header <code>Location</code>.</li>
+  <li><strong>Body Structure / JSON Schema:</strong> Menguji skema JSON dengan <code>pm.response.to.have.jsonSchema</code>.</li>
+  <li><strong>Data Types and Values:</strong> Mengecek tipe data dan batasan nilai enum (5 tahap alur kerja, prioritas, akhiran waktu Z).</li>
+  <li><strong>Business Rules:</strong> Memverifikasi logika bisnis, termasuk flag <code>is_overdue</code> aktif jika status belum selesai dan tenggat lampau.</li>
+  <li><strong>Error Handling and Messages:</strong> Memastikan pesan error terstruktur pada objek <code>error.message</code> dan <code>error.fields</code>.</li>
+  <li><strong>Authentication and Cookies:</strong> Memeriksa akses publik tanpa header otorisasi dan ketiadaan cookie sesi.</li>
+  <li><strong>Consistency with Request:</strong> Memastikan data yang disimpan dan dikembalikan server cocok dengan body request.</li>
+</ol>
+
+<p>Penjelasan lengkap dan contoh kode pengujian Postman tersedia di berkas <a href="../JAWABAN_QA.md">JAWABAN_QA.md</a>.</p>
+
+<hr>
+
+<h2>8. Penggunaan AI dan Verifikasinya</h2>
+
+<p>Saya mengembangkan proyek ini dengan bantuan AI secara transparan:</p>
+<ul>
+  <li>Claude Code sebagai koordinator arsitektur melalui harness Herdr untuk mengelola spesifikasi dan alur pengerjaan.</li>
+  <li>Agen Antigravity dan OpenCode sebagai eksekutor kode backend Flask, komponen Jinja dan Tailwind v4, serta pengujian otomatis.</li>
+</ul>
+
+<p>Setiap kode diverifikasi melalui tiga tahap: 95 test pytest, 81 asersi Newman Postman, dan skrip Playwright headless browser.</p>
+
+<p>Review menemukan dan memperbaiki enam bug sebelum rilis:</p>
+<ol>
+  <li><strong>Form edit menimpa status done:</strong> Form awal tidak menyertakan status sehingga tugas done kembali ke todo. Saya menambahkan pilihan status dan validasi parsial.</li>
+  <li><strong>Variabel responseBody bentrok di Postman:</strong> Deklarasi const responseBody menimpa variabel global Postman sehingga 12 asersi gagal. Saya mengganti namanya menjadi createdBody.</li>
+  <li><strong>Scope loop Jinja pada navigasi tahapan:</strong> Variabel indeks tidak terbarui di luar loop Jinja sehingga tombol Mundur hilang. Saya memperbaikinya dengan namespace(idx=-1).</li>
+  <li><strong>Overflow horizontal pada tablet:</strong> Kontainer papan memicu scrollbar horizontal pada lebar 600px sampai 1023px. Saya mengisolasinya dengan scroll-snap-type dan overflow-x: auto.</li>
+  <li><strong>Dialog server terbuka non-modal:</strong> Saat validasi form gagal, server me-render ulang dialog tanpa memanggil showModal(). Saya menambahkan pemanggilan showModal() dan kelas .is-locked.</li>
+  <li><strong>Kalender melebihi tinggi layar desktop:</strong> Tabel kalender awal melebihi tinggi layar. Saya memperbaikinya dengan flexbox adaptif agar scrollHeight sama dengan innerHeight.</li>
+</ol>
+
+<hr>
+
+<h2>9. Langkah Pengembangan Berikutnya</h2>
+
+<p>Rencana peningkatan lanjutan untuk kebutuhan produksi perbankan:</p>
+<ol>
+  <li><strong>Autentikasi dan Kontrol Akses (RBAC):</strong> Integrasi Single Sign-On (SSO) LDAP perbankan dengan pemisahan peran antara Staf, Reviewer, Koordinator BCM, dan Auditor.</li>
+  <li><strong>Keamanan:</strong> Penambahan token CSRF pada form HTML dan pembatasan laju request (rate limiting) pada API.</li>
+  <li><strong>Notifikasi:</strong> Pengiriman email atau webhook otomatis saat tugas mendekati batas tenggat waktu.</li>
+  <li><strong>Migrasi Database:</strong> Integrasi Alembic (Flask-Migrate) untuk mengelola riwayat perubahan skema tanpa drop tabel.</li>
+  <li><strong>Otomasi CI/CD:</strong> Pipeline GitHub Actions untuk menjalankan pytest, Newman Postman, linter, dan uji visual Playwright pada setiap pull request.</li>
+</ol>
+
+<hr>
+
+<h2>10. Sumber dan Atribusi</h2>
+
+<ul>
+  <li>Logo, favicon, dan palet warna CIMB Niaga diambil dari <code>cimbniaga.co.id</code> untuk studi kasus penugasan MagangHub ini saja, bukan produk resmi PT Bank CIMB Niaga Tbk.</li>
+  <li>Tailwind CSS v4 standalone executable binary dari Tailwind Labs tanpa dependensi Node.js.</li>
+  <li>GSAP 3 versi 3.12.5 via CDN jsDelivr.</li>
+  <li>Font Plus Jakarta Sans dari Google Fonts, dirancang oleh Tokotype (Gumpita Rahayu).</li>
+</ul>
+
+</body>
+</html>

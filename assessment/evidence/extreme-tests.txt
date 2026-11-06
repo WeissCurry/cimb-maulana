@@ -1,0 +1,89 @@
+Extreme black-box API and HTML tests against the running app on MySQL 8.4 (2026-11-06 19:24 WIB)
+Covers: XSS/SQL injection payloads, length and unicode boundaries, date edge cases, malformed bodies, huge IDs, wrong methods, open-redirect attempts, 100 parallel creates and moves, 400+ tasks latency.
+
+PASS XSS payload stored as text (201)
+PASS SQL injection payload stored as text (201)
+PASS XSS escaped in page HTML
+PASS tasks table still exists after SQLi payload
+PASS SQLi in filter rejected with 400 JSON  [400]
+PASS view=board with junk priority renders 200  [200]
+PASS view=list with junk priority renders 200  [200]
+PASS view=calendar with junk priority renders 200  [200]
+PASS view=gantt with junk priority renders 200  [200]
+PASS title 200 chars ascii accepted
+PASS title 201 chars rejected 400
+PASS title 200 CJK chars accepted and round-trips  [201]
+PASS emoji + RTL + accents round-trip (utf8mb4)  [201]
+PASS description 2000 chars accepted
+PASS description 2001 chars rejected
+PASS whitespace-only title rejected
+PASS title trimmed
+PASS 2026-02-29 rejected
+PASS 2028-02-29 accepted
+PASS due_date '2026-1-1' handled  [400]
+PASS due_date '06/11/2026' handled  [400]
+PASS due_date '2026-13-01' handled  [400]
+PASS due_date 'abc' handled  [400]
+PASS due_date '2026-11-06T10:00' handled  [400]
+PASS due_date '' handled  [201]
+PASS 9999-12-31 and 0001-01-01 accepted  [201/201]
+PASS view=board renders with extreme dates  [200]
+PASS view=list renders with extreme dates  [200]
+PASS view=calendar renders with extreme dates  [200]
+PASS view=gantt renders with extreme dates  [200]
+PASS calendar month='0000-00' no 500  [200]
+PASS calendar month='2026-13' no 500  [200]
+PASS calendar month='abc' no 500  [200]
+PASS calendar month='9999-12' no 500  [200]
+PASS calendar month='0001-01' no 500  [200]
+PASS calendar month='2026-1' no 500  [200]
+PASS calendar month='-1-01' no 500  [200]
+PASS calendar month='10000-01' no 500  [200]
+PASS numeric title rejected 400
+PASS array title rejected 400
+PASS null title rejected 400
+PASS unknown priority rejected 400
+PASS unknown status rejected 400
+PASS numeric priority rejected 400
+PASS numeric date rejected 400
+PASS priority case-insensitive  [201]
+PASS malformed JSON 400
+PASS JSON array body 400
+PASS empty body 400
+PASS wrong content-type 400
+PASS 1 MB body rejected (400/413), no 500  [400]
+PASS deeply nested JSON no 500  [201]
+PASS GET /api/tasks/0 -> 404 JSON  [404]
+PASS GET /api/tasks/-1 -> 404 JSON  [404]
+PASS GET /api/tasks/abc -> 404 JSON  [404]
+PASS GET /api/tasks/99999999999999999999 -> 404 JSON  [404]
+PASS GET /api/tasks/2147483648 -> 404 JSON  [404]
+PASS PUT huge id -> 404  [404]
+PASS PATCH -> 405 JSON  [405]
+PASS HTML /tasks/99999999999999999999 no 500  [200]
+PASS HTML /?task=99999999999999999999 no 500  [200]
+PASS HTML /?task=abc no 500  [200]
+PASS HTML /?task=-5 no 500  [200]
+PASS HTML /nope no 500  [404]
+PASS history has 6 events (create + 5 moves, same-status ignored)  [6]
+PASS history ordered oldest first
+PASS move invalid status 400
+PASS timestamps end with Z
+PASS history of deleted task 404
+PASS delete twice 404
+PASS next='//evil.example' not an open redirect  [/]
+PASS next='https://evil.example' not an open redirect  [/]
+PASS next='/\\evil.example' not an open redirect  [/]
+PASS next='/%5Cevil.example' not an open redirect  [/]
+PASS next='\\\\evil.example' not an open redirect  [/]
+PASS next='javascript:alert(1)' not an open redirect  [/]
+PASS 100 parallel creates all 201  [{201: 100}]
+PASS 100 parallel moves all 200  [{200: 100}]
+PASS each moved task has exactly 2 events  [20]
+PASS view=board with 514 tasks renders < 1500 ms  [158 ms, 8249 KB]
+PASS view=list with 514 tasks renders < 1500 ms  [155 ms, 8246 KB]
+PASS view=calendar with 514 tasks renders < 1500 ms  [162 ms, 8258 KB]
+PASS view=gantt with 514 tasks renders < 1500 ms  [148 ms, 8249 KB]
+PASS GET /api/tasks with 514 tasks < 500 ms  [7 ms]
+
+TOTAL 84  PASS 84  FAIL 0

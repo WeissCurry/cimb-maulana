@@ -1,0 +1,24 @@
+UI extreme check, Chromium headless (2026-11-06 19:28 WIB)
+Tasks titled with an XSS payload, a 200-char unbroken string and a long non-breaking title; 4 views x 4 widths (280, 390, 884, 1440).
+sx = page sideways scroll (must be 0); escaping = elements wider than the viewport outside scroll containers (must be 0).
+280 board sx 0 escaping 0 
+280 list sx 0 escaping 0 
+280 calendar sx 0 escaping 0 
+280 gantt sx 0 escaping 0 
+280 dialog long title horizontal overflow px 0
+390 board sx 0 escaping 0 
+390 list sx 0 escaping 0 
+390 calendar sx 0 escaping 0 
+390 gantt sx 0 escaping 0 
+390 dialog long title horizontal overflow px 0
+884 board sx 0 escaping 0 
+884 list sx 0 escaping 0 
+884 calendar sx 0 escaping 0 
+884 gantt sx 0 escaping 0 
+884 dialog long title horizontal overflow px 0
+1440 board sx 0 escaping 0 
+1440 list sx 0 escaping 0 
+1440 calendar sx 0 escaping 0 
+1440 gantt sx 0 escaping 0 
+1440 dialog long title horizontal overflow px 0
+alerts fired: [] js errors: []

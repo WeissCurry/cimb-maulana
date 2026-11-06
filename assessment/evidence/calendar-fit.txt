@@ -1,0 +1,8 @@
+Calendar view fit check: scrollHeight (sh) must equal innerHeight (ih) on desktop (2026-11-06 19:01 WIB)
+1440 900 {'sh': 900, 'ih': 900, 'sx': False} day click -> 8
+1280 720 {'sh': 720, 'ih': 720, 'sx': False} day click -> 8
+1920 1080 {'sh': 1080, 'ih': 1080, 'sx': False} day click -> 8
+1024 768 {'sh': 768, 'ih': 768, 'sx': False} day click -> 8
+884 1104 {'sh': 1104, 'ih': 1104, 'sx': False} day click -> 8
+390 844 {'sh': 1251, 'ih': 844, 'sx': False} day click -> 
+errors []

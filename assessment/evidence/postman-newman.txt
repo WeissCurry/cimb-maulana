@@ -1,0 +1,153 @@
+$ newman run postman_collection.json  (2026-11-06 19:02 WIB)
+newman
+
+Daftar Tugas Harian API
+
+→ GET /api/tasks (Semua Tugas)
+  GET http://127.0.0.1:5001/api/tasks [200 OK, 2.53kB, 14ms]
+  ✓  Status code is 200
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ GET /api/tasks?status=in_progress&priority=high (Filter Valid)
+  GET http://127.0.0.1:5001/api/tasks?status=in_progress&priority=high [200 OK, 530B, 2ms]
+  ✓  Status code is 200
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ GET /api/tasks (Filter Status Tidak Valid - 400)
+  GET http://127.0.0.1:5001/api/tasks?status=invalid_status [400 BAD REQUEST, 364B, 1ms]
+  ✓  Status code is 400
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ POST /api/tasks (Buat Tugas Baru - 201)
+  POST http://127.0.0.1:5001/api/tasks [201 CREATED, 605B, 5ms]
+  ✓  Status code is 201
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+  ✓  Header Location tersedia
+
+→ POST /api/tasks (Judul Kosong - 400)
+  POST http://127.0.0.1:5001/api/tasks [400 BAD REQUEST, 291B, 1ms]
+  ✓  Status code is 400
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ POST /api/tasks (Prioritas Tidak Valid - 400)
+  POST http://127.0.0.1:5001/api/tasks [400 BAD REQUEST, 327B, 1ms]
+  ✓  Status code is 400
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ GET /api/tasks/{{taskId}} (Ambil Rincian Tugas - 200)
+  GET http://127.0.0.1:5001/api/tasks/43 [200 OK, 575B, 2ms]
+  ✓  Status code is 200
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ POST /api/tasks/{{taskId}}/move (Pindah Tahapan Valid - 200)
+  POST http://127.0.0.1:5001/api/tasks/43/move [200 OK, 581B, 3ms]
+  ✓  Status code is 200
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ POST /api/tasks/{{taskId}}/move (Pindah Tahapan Status Tidak Valid - 400)
+  POST http://127.0.0.1:5001/api/tasks/43/move [400 BAD REQUEST, 343B, 2ms]
+  ✓  Status code is 400
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ GET /api/tasks/{{taskId}}/history (Riwayat Tahapan Tugas - 200)
+  GET http://127.0.0.1:5001/api/tasks/43/history [200 OK, 480B, 2ms]
+  ✓  Status code is 200
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ GET /api/tasks/999999 (Tugas Tidak Ditemukan - 404)
+  GET http://127.0.0.1:5001/api/tasks/999999 [404 NOT FOUND, 246B, 2ms]
+  ✓  Status code is 404
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ PUT /api/tasks/{{taskId}} (Perbarui Tugas - 200)
+  PUT http://127.0.0.1:5001/api/tasks/43 [200 OK, 577B, 3ms]
+  ✓  Status code is 200
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ PUT /api/tasks/{{taskId}} (Prioritas Tidak Valid - 400)
+  PUT http://127.0.0.1:5001/api/tasks/43 [400 BAD REQUEST, 327B, 1ms]
+  ✓  Status code is 400
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ PUT /api/tasks/999999 (Tugas Tidak Ditemukan - 404)
+  PUT http://127.0.0.1:5001/api/tasks/999999 [404 NOT FOUND, 246B, 2ms]
+  ✓  Status code is 404
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ DELETE /api/tasks/999999 (Tugas Tidak Ditemukan - 404)
+  DELETE http://127.0.0.1:5001/api/tasks/999999 [404 NOT FOUND, 246B, 1ms]
+  ✓  Status code is 404
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+→ DELETE /api/tasks/{{taskId}} (Hapus Tugas - 200)
+  DELETE http://127.0.0.1:5001/api/tasks/43 [200 OK, 199B, 3ms]
+  ✓  Status code is 200
+  ✓  Response time is less than 500ms
+  ✓  Content-Type header is application/json
+  ✓  Response matches JSON schema
+  ✓  Validate field values
+
+┌─────────────────────────┬─────────────────┬─────────────────┐
+│                         │        executed │          failed │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              iterations │               1 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│                requests │              16 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│            test-scripts │              16 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│      prerequest-scripts │               0 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              assertions │              81 │               0 │
+├─────────────────────────┴─────────────────┴─────────────────┤
+│ total run duration: 233ms                                   │
+├─────────────────────────────────────────────────────────────┤
+│ total data received: 5.7kB (approx)                         │
+├─────────────────────────────────────────────────────────────┤
+│ average response time: 2ms [min: 1ms, max: 14ms, s.d.: 3ms] │
+└─────────────────────────────────────────────────────────────┘
